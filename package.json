@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "@discordjs/builders": "^1.2.0",
+    "@discordjs/rest": "^0.4.1",
+    "discord-api-types": "^0.33.0",
+    "discord.js": "^14.7.1",
+    "dotenv": "^16.0.1",
+    "fs": "^0.0.1-security",
+    "node-cache": "^5.1.2",
+    "undici": "^5.20.0"
+  },
+  "name": "gudadmin-bot",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "deploy": "node src/Scripts/deploy-commands.js"
+  },
+  "author": "Thomas Huynh",
+  "license": "ISC",
+  "description": "",
+  "type": "module"
+}
