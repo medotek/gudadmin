@@ -44,7 +44,7 @@ export async function LogsSubmitModalHandler(interaction) {
                 .setLabel('Non')
                 .setStyle(ButtonStyle.Danger))
 
-        // STEP 4 - NOTIFICATION
+        // NEXT STEP : 4 - NOTIFICATION
         interactionUpdate = {
             embeds: [embed],
             components: [buttonsMenuBuilderRow, notificationButtons]
