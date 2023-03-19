@@ -1,2 +1,2 @@
-# gazetto-bot
-Bot discord custom de" La Gazette de Teyvat"
+# gudadmin
+Bot admin discord custom de" La Gazette de Teyvat"
