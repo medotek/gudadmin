@@ -2,5 +2,6 @@ config.json
 /node_modules
 package-lock.json
 .env*
+!.env.dist
 .idea/
 /test
