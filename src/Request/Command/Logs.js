@@ -46,7 +46,7 @@ async function gudapiEndpointRequest(endpoint, isPublic = false, data = null, me
         headers: headers
     }
     if (data) {
-        options.body = data
+        options.body = JSON.stringify(data)
     }
 
     return await request(
