@@ -1,8 +1,5 @@
 import {Cache} from "../Module/Cache.js";
-import {fetchResponse} from "../Request/Command/Logs.js";
-import {client} from "../index.js";
-import {LogsNotificationEmbed} from "../Builder/EmbedBuilder.js";
-import {logsNotificationRole} from "../Helper/NotificationRole.js";
+import {logsCreationRequestHandler} from "../Handler/Request/logs.js";
 
 export class Logs {
 
@@ -83,45 +80,7 @@ export class Logs {
 
                 Cache.set(cacheId, logsOjb);
 
-                /**
-                 * Processing log creation
-                 */
-                if (stepNumber !== 4) return true;
-                let response = await fetchResponse('logs/create', false, logsOjb, 'POST')
-                if (!response) return false
-
-                if (typeof response === 'object' && response.hasOwnProperty('success')
-                    && response.hasOwnProperty('message')
-                ) {
-                    if (response.success) {
-                        try {
-                            // Notify on discord
-                            let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
-                            let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
-                            let message = {embeds: [LogsNotificationEmbed(logsOjb)]}
-                            let canBeNotifiedInDiscord = false
-
-                            switch (logsOjb.type) {
-                                case 'website':
-                                    canBeNotifiedInDiscord = true;
-                                    message = {content: logsNotificationRole(logsOjb.type) + "\n\n" + ` ${logsOjb.description}` + "\n" + logsOjb.link}
-                                    break;
-                                case 'discord':
-                                    canBeNotifiedInDiscord = true;
-                                    break;
-                            }
-
-                            if (canBeNotifiedInDiscord)
-                                notificationChannel.send(message)
-                        } catch (e) {
-                            // TODO : cache errors
-                        }
-
-                        Cache.clear(cacheId)
-                    }
-
-                    return response.message
-                }
+                return logsCreationRequestHandler(logsOjb, cacheId, stepNumber);
             }
 
             return false;

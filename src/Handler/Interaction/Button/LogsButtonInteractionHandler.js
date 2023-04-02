@@ -6,7 +6,6 @@ export async function LogsButtonInteractionHandler(interaction) {
         || typeof interaction.customId === 'undefined')
         return
 
-    console.log(interaction.customId)
     switch (interaction.customId) {
         // LOGS INIT ACTIONS
         case 'logs-create':
@@ -18,15 +17,18 @@ export async function LogsButtonInteractionHandler(interaction) {
             break;
         // STEP 4 - NOTIFICATION
         case 'logs-notification-action-true':
+            // Final step - return content only
             let result1 = await logNotificationDTO(interaction, true)
             if (result1 && typeof result1 === 'string')
-                await interaction.update({content: result1})
+                await interaction.update({content: result1, embeds: [], components: []})
             break;
         case 'logs-notification-action-false':
             let result2 = await logNotificationDTO(interaction, false)
             if (result2 && typeof result2 === 'string')
-                await interaction.update({content: result2})
+                await interaction.update({content: result2, embeds: [], components: []})
             break;
+        default:
+            await interaction.reply({content: 'Error thrown'})
     }
 }
 
