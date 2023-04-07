@@ -50,7 +50,8 @@ export async function LogsCreationSubmitModalHandler(interaction) {
         // NEXT STEP : 4 - NOTIFICATION
         interactionUpdate = {
             embeds: [embed],
-            components: [buttonsMenuBuilderRow, notificationButtons]
+            components: [buttonsMenuBuilderRow, notificationButtons],
+            ephemeral: true
         }
     }
 

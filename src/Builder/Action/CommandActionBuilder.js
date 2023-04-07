@@ -13,6 +13,7 @@ import {fetchResponse} from "../../Request/Command/Logs.js";
 import {config} from 'dotenv'
 import {Logs} from "../../Components/logs.js";
 import {Cache} from "../../Module/Cache.js";
+import {LogsDeleteContextMessageCommandBuilder} from "../CommandBuilder.js";
 
 config()
 
@@ -261,5 +262,25 @@ export async function LogsUpdateActionBuilder(interaction) {
 
     return {
         embeds: [embed], components: [buttonsMenuBuilderRow, selectMenuBuilderRow]
+    }
+}
+
+export function LogsDeleteContextMessageActionBuilder(messageUrl, interaction) {
+    let embed = new EmbedBuilder();
+    embed.setDescription("Etes-vous sûr de supprimer le log ?")
+
+    let buttons = new ActionRowBuilder().addComponents(new ButtonBuilder()
+        .setCustomId('logs-delete-action')
+        .setLabel('Supprimer')
+        .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
+            .setCustomId('logs-return-action')
+            .setLabel('Annuler')
+            .setStyle(ButtonStyle.Secondary))
+
+    return {
+        content: `> Action demandée par <@${interaction.user.id}> | Suppression du log ${messageUrl}`,
+        embeds: [embed],
+        components: [buttons]
     }
 }

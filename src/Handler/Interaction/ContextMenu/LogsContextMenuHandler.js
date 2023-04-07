@@ -1,6 +1,8 @@
-import {LogsCRUDModalBuilder} from "../../../Builder/Action/CommandActionBuilder.js";
+import {
+    LogsCRUDModalBuilder,
+    LogsDeleteContextMessageActionBuilder
+} from "../../../Builder/Action/CommandActionBuilder.js";
 import {config} from 'dotenv'
-import {CachedManager, Message, MessageManager} from "discord.js";
 
 config();
 
@@ -15,6 +17,21 @@ export async function LogsContextMenuHandler(interaction) {
             await interaction.showModal(modal)
             break;
         case 'Supprimer':
+            let messageId = interaction.targetId
+            // TODO : Set messageId into cache
+
+            let repliedInteraction = await interaction.guild.channels.cache.get(process.env.GUDA_LOG_BOT_CHANNEL).send(
+                LogsDeleteContextMessageActionBuilder(`https://discord.com/channels/${process.env.GUILD_ID}/${process.env.GUDA_LOG_NOTIFICATION_CHANNEL}/${messageId}`, interaction)
+            )
+
+            setTimeout(async function () {
+                repliedInteraction.delete()
+            }, 30000)
+
+            await interaction.reply({
+                content: `Valider la suppression du log https://discord.com/channels/${repliedInteraction.guildId}/${repliedInteraction.channelId}/${repliedInteraction.id}`,
+                ephemeral: true
+            })
             break;
     }
 }
