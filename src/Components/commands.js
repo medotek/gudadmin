@@ -3,14 +3,13 @@ import {LogsInteractionHandler} from "../Handler/Interaction/SlashCommand/Logs.j
 import {LogsButtonInteractionHandler} from "../Handler/Interaction/Button/LogsButtonInteractionHandler.js";
 import {LogsContextMenuHandler} from "../Handler/Interaction/ContextMenu/LogsContextMenuHandler.js";
 import {LogsSelectInteractionHandler} from "../Handler/Interaction/Select/LogsSelectInteractionHandler.js";
-import {LogsSubmitModalHandler} from "../Handler/Interaction/Modal/LogsModalHandler.js";
+import {
+    LogsCreationSubmitModalHandler,
+    LogsUpdateSubmitModalHandler
+} from "../Handler/Interaction/Modal/LogsModalHandler.js";
 
 export const Commands = (client, sequelize) => {
     client.on('interactionCreate', async interaction => {
-        // let response = {
-        //     message: 'An error occurred, medo help!'
-        // };
-
         /**************************************/
         /******** MESSAGE CONTEXT MENU ********/
         /**************************************/
@@ -44,7 +43,10 @@ export const Commands = (client, sequelize) => {
             /********* MODAL SUBMITTED *********/
             /***********************************/
         if (interaction.isModalSubmit()) {
-            await LogsSubmitModalHandler(interaction)
+            // Logs creation handler
+            await LogsCreationSubmitModalHandler(interaction)
+            // Logs update handler
+            await LogsUpdateSubmitModalHandler(interaction)
         }
     })
 }

@@ -1,14 +1,17 @@
-import {fetchResponse} from "../../../Request/Command/Logs.js";
 import {Logs} from "../../../Components/logs.js";
 import {ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder} from "discord.js";
-
-export async function LogsSubmitModalHandler(interaction) {
+/**
+ * Handling log creation on modal submit
+ * @param interaction
+ * @returns {Promise<*|boolean>}
+ * @constructor
+ */
+export async function LogsCreationSubmitModalHandler(interaction) {
+    // Accept submission from log creations only
     if (interaction.customId !== 'logs-create-modal') return false;
-
-    // TODO : Logs create - next step (4) -> notify -> (5) -> create log from post request
     let title = interaction.fields.getTextInputValue('logs-create-modal-title')
     let description = interaction.fields.getTextInputValue('logs-create-modal-description')
-    let link = interaction.fields.getTextInputValue('logs-create-modal-link')
+    let url = interaction.fields.getTextInputValue('logs-create-modal-link')
 
     /**
      * Get cached log
@@ -24,7 +27,7 @@ export async function LogsSubmitModalHandler(interaction) {
     }
 
     if (await Logs.create(3, interaction.user.id, interaction.message.id, {
-        title: title, description: description, link: link
+        title: title, description: description, url: url
     })) {
         let embed = new EmbedBuilder();
         embed.setDescription(interaction.message.embeds[0].description)
@@ -52,4 +55,17 @@ export async function LogsSubmitModalHandler(interaction) {
     }
 
     return await interaction.update(interactionUpdate)
+}
+
+
+export async function LogsUpdateSubmitModalHandler(interaction) {
+    // Get description from the submitted modal
+    let description = interaction.fields.getTextInputValue('logs-update-description')
+    let url = interaction.fields.getTextInputValue('logs-update-url')
+
+    if (!await Logs.update(interaction.user.id, {description: description, url: url})) {
+        return await interaction.reply({content: 'Une erreur est survenue', ephemeral: true})
+    }
+
+    return await interaction.reply({content: 'Log modifié avec succès', ephemeral: true})
 }

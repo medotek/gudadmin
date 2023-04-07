@@ -11,5 +11,5 @@ export function LogsNotificationEmbed(data) {
         .setColor(0xf2d77c)
         .setTitle(data.title)
         .setDescription(data.description)
-        .setURL(data.link)
+        .setURL(data.url)
 }

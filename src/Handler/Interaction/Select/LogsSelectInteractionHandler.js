@@ -1,7 +1,7 @@
 import {Logs} from "../../../Components/logs.js";
 import {
     LogsCreateActionBuilderStep2,
-    LogsCreateActionBuilderStep3
+    LogsCreateActionBuilderStep3, LogsCRUDModalBuilder
 } from "../../../Builder/Action/CommandActionBuilder.js";
 
 export async function LogsSelectInteractionHandler(interaction) {
@@ -27,6 +27,12 @@ export async function LogsSelectInteractionHandler(interaction) {
             }
             break
 
+        case 'update-log-select':
+            // Update log from SELECT action
+            let modal = await LogsCRUDModalBuilder(interaction, 'select', value)
+            if (!modal) return await interaction.reply({content:'Error thrown', ephemeral:true})
+
+            await interaction.showModal(modal)
         default:
     }
 }

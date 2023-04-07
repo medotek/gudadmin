@@ -1,5 +1,8 @@
 import {Cache} from "../Module/Cache.js";
 import {logsCreationRequestHandler} from "../Handler/Request/logs.js";
+import {fetchResponse} from "../Request/Command/Logs.js";
+import {client} from "../index.js";
+import {LogsNotificationEmbed} from "../Builder/EmbedBuilder.js";
 
 export class Logs {
 
@@ -35,7 +38,7 @@ export class Logs {
                 user: userId,
                 title: null,
                 description: null,
-                link: null,
+                url: null,
                 type: null,
                 notification: false
             }
@@ -59,15 +62,15 @@ export class Logs {
                             logsOjb.type = value
                         break
                     case 3:
-                        /** STEP 3 - MODAL - SET TITLE, DESCRIPTION, LINK */
+                        /** STEP 3 - MODAL - SET TITLE, DESCRIPTION, URL */
                         if (typeof value === 'object'
                             && value.hasOwnProperty('title')
                             && value.hasOwnProperty('description')
-                            && value.hasOwnProperty('link')
+                            && value.hasOwnProperty('url')
                         ) {
                             logsOjb.title = value.title
                             logsOjb.description = value.description
-                            logsOjb.link = value.link
+                            logsOjb.url = value.url
                         } else {
                             return false;
                         }
@@ -85,5 +88,41 @@ export class Logs {
 
             return false;
         }
+    }
+
+    static async update(userId, obj) {
+        let cachedLog = await Cache.retrieve(`log_update_${userId}`)
+
+        if (!cachedLog
+            || typeof cachedLog !== 'object'
+            || !cachedLog.hasOwnProperty('id')
+            || !cachedLog.id)
+            return false
+
+        let updatedLog = await fetchResponse(`logs/update`, false, {
+            id: cachedLog.id,
+            description: obj.description,
+            url: obj.url
+        }, 'PUT')
+
+        /**
+         * Update discord message
+         */
+        if (updatedLog
+            && (updatedLog.hasOwnProperty('success') && updatedLog.success)
+            && (updatedLog.hasOwnProperty('data') && updatedLog.data.messageId)
+        ) {
+            let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
+            let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
+            let message = await notificationChannel.messages.fetch(updatedLog.data.messageId)
+            let content = {embeds: [LogsNotificationEmbed(updatedLog.data)]}
+            if (message) message.edit(content)
+            // Flush cache
+            await Cache.clear(`log_update_${userId}`)
+
+            return true;
+        }
+
+        return false;
     }
 }

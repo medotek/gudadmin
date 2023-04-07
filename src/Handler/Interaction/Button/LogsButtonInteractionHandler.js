@@ -1,4 +1,4 @@
-import {LogsCreateActionBuilderStep1} from "../../../Builder/Action/CommandActionBuilder.js";
+import {LogsCreateActionBuilderStep1, LogsUpdateActionBuilder} from "../../../Builder/Action/CommandActionBuilder.js";
 import {Logs} from "../../../Components/logs.js";
 
 export async function LogsButtonInteractionHandler(interaction) {
@@ -11,9 +11,13 @@ export async function LogsButtonInteractionHandler(interaction) {
         case 'logs-create':
             let newInteraction = await LogsCreateActionBuilderStep1(interaction)
             await interaction.update(newInteraction)
-        case 'logs-modify':
+            break;
+        case 'logs-update':
+            let updateInteraction = await LogsUpdateActionBuilder(interaction)
+            await interaction.update(updateInteraction)
             break;
         case 'logs-delete':
+            // TODO : delete a log
             break;
         // STEP 4 - NOTIFICATION
         case 'logs-notification-action-true':

@@ -25,7 +25,7 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
         switch (logsOjb.type) {
             case 'website':
                 canBeNotifiedInDiscord = true;
-                message = {content: logsNotificationRole(logsOjb.type) + "\n\n" + ` ${logsOjb.description}` + "\n" + logsOjb.link}
+                message = {content: logsNotificationRole(logsOjb.type) + "\n\n" + ` ${logsOjb.description}` + "\n" + logsOjb.url}
                 break;
             case 'discord':
                 canBeNotifiedInDiscord = true;
