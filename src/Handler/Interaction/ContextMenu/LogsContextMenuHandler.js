@@ -3,6 +3,8 @@ import {
     LogsDeleteContextMessageActionBuilder
 } from "../../../Builder/Action/CommandActionBuilder.js";
 import {config} from 'dotenv'
+import {fetchResponse} from "../../../Request/Command/Logs.js";
+import {Cache} from "../../../Module/Cache.js";
 
 config();
 
@@ -18,7 +20,16 @@ export async function LogsContextMenuHandler(interaction) {
             break;
         case 'Supprimer':
             let messageId = interaction.targetId
-            // TODO : Set messageId into cache
+            const response = await fetchResponse(`logs/get/${messageId}`, false)
+
+            if (typeof response !== 'object' || !response.hasOwnProperty('success') || !response.success) {
+                return await interaction.reply({
+                    content: "Le log est introuvable",
+                    ephemeral: true
+                })
+            }
+
+            Cache.set(`log_delete_${interaction.user.id}_${messageId}`, response.data.id)
 
             let repliedInteraction = await interaction.guild.channels.cache.get(process.env.GUDA_LOG_BOT_CHANNEL).send(
                 LogsDeleteContextMessageActionBuilder(`https://discord.com/channels/${process.env.GUILD_ID}/${process.env.GUDA_LOG_NOTIFICATION_CHANNEL}/${messageId}`, interaction)

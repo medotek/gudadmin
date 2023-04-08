@@ -13,8 +13,6 @@ import {fetchResponse} from "../../Request/Command/Logs.js";
 import {config} from 'dotenv'
 import {Logs} from "../../Components/logs.js";
 import {Cache} from "../../Module/Cache.js";
-import {LogsDeleteContextMessageCommandBuilder} from "../CommandBuilder.js";
-
 config()
 
 export function LogsActionsManagementBuilder() {
@@ -66,6 +64,7 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
             let _data = '';
             if (origin === 'context' && interaction.hasOwnProperty('targetId') && typeof interaction.targetId !== 'undefined') {
                 let response = await fetchResponse(`logs/get/${interaction.targetId}`, false)
+                console.log(response)
                 if (typeof response !== 'object' || !response.hasOwnProperty('success') || !response.hasOwnProperty('data'))
                     return false;
 
@@ -270,11 +269,11 @@ export function LogsDeleteContextMessageActionBuilder(messageUrl, interaction) {
     embed.setDescription("Etes-vous sûr de supprimer le log ?")
 
     let buttons = new ActionRowBuilder().addComponents(new ButtonBuilder()
-        .setCustomId('logs-delete-action')
+        .setCustomId('logs-delete-confirm')
         .setLabel('Supprimer')
         .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-            .setCustomId('logs-return-action')
+            .setCustomId('logs-delete-cancel')
             .setLabel('Annuler')
             .setStyle(ButtonStyle.Secondary))
 
