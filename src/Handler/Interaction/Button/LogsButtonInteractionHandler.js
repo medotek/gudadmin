@@ -1,4 +1,7 @@
-import {LogsCreateActionBuilderStep1, LogsUpdateActionBuilder} from "../../../Builder/Action/CommandActionBuilder.js";
+import {
+    LogsCreateActionBuilderStep1,
+    LogsSelectActionBuilder
+} from "../../../Builder/Action/CommandActionBuilder.js";
 import {Logs} from "../../../Components/logs.js";
 import {Cache} from "../../../Module/Cache.js";
 import {fetchResponse} from "../../../Request/Command/Logs.js";
@@ -16,7 +19,7 @@ export async function LogsButtonInteractionHandler(interaction) {
                 await interaction.update(newInteraction)
                 break;
             case 'logs-update':
-                let updateInteraction = await LogsUpdateActionBuilder(interaction)
+                let updateInteraction = await LogsSelectActionBuilder(interaction, 'update')
                 await interaction.update(updateInteraction)
                 break;
             // STEP 4 - NOTIFICATION
@@ -31,7 +34,10 @@ export async function LogsButtonInteractionHandler(interaction) {
                 if (result2 && typeof result2 === 'string')
                     await interaction.update({content: result2, embeds: [], components: []})
                 break;
-            case 'logs-delete-cancel':
+            case 'logs-delete':
+                let deleteInteraction = await LogsSelectActionBuilder(interaction, 'delete')
+                await interaction.update(deleteInteraction)
+                break;
             default:
                 await interaction.reply({content: 'Error thrown', ephemeral: true})
         }
@@ -41,30 +47,62 @@ export async function LogsButtonInteractionHandler(interaction) {
         }
 
         let splitMessage = interaction.message.content.split('/')
-        if (!splitMessage || !splitMessage[splitMessage.length-1])     return await interaction.reply({content: 'No message id found', ephemeral: true})
-        let messageId = splitMessage[splitMessage.length-1]
+        if (splitMessage.length === 1)
+            splitMessage = interaction.message.content.split('#')
+        if (!splitMessage) {
+            return await interaction.reply({content: 'No message id found', ephemeral: true})
+        }
+
+        let logRef = null
+        let messageId = null
+        if (splitMessage.length === 2) {
+            logRef = splitMessage[1]
+        } else {
+            messageId = splitMessage[splitMessage.length - 1]
+        }
 
         if (interaction.customId === 'logs-delete-confirm') {
             let channel = interaction.guild.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL)
-            let logId = await Cache.retrieve(`log_delete_${interaction.user.id}_${messageId}`)
-            if (!logId) return
+            let cacheId = 'log_delete_' + (logRef ? 'select_' : '') + interaction.user.id + (messageId ? `_${messageId}` : '')
+            let logId = await Cache.retrieve(cacheId)
+
+            if (!logId) return await interaction.reply({
+                content: `La commande a expiré, veuillez recommencer`,
+                ephemeral: true
+            })
+
             const response = await fetchResponse(`logs/delete/${logId}`, false, '', 'DELETE')
             if (!channel || typeof response !== 'object' || !response.hasOwnProperty('success') || !response.success) return
-            let notifiedLog = await channel.messages.fetch(messageId)
-            if (!notifiedLog) return
-            await interaction.message.delete();
-            await notifiedLog.delete();
+
+            if (messageId) {
+                let notifiedLog = await channel.messages.fetch(messageId)
+                if (!notifiedLog) return await interaction.reply({
+                    content: "Error thrown",
+                    ephemeral: true
+                })
+
+                // Delete notified log
+                await notifiedLog.delete();
+            }
+
+            // Reply to interaction
             await interaction.reply({
                 content: "Log supprimé",
                 ephemeral: true
             })
-        } else if (interaction.customId === 'logs-delete-cancel') {
-            // Clear cached log id
-            await interaction.message.delete()
-        }
-        Cache.clear(`log_delete_${interaction.user.id}_${messageId}`)
-    }
 
+            // Clear cached log id
+            Cache.clear(cacheId)
+        }
+
+        // In case the message has already been deleted by the setTimeout func
+        try {
+            // Delete confirm message
+            await interaction.message.delete();
+        } catch (e) {
+            // Prevent from throwing errors
+        }
+    }
 }
 
 /**

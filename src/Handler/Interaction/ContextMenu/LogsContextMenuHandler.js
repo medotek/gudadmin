@@ -32,11 +32,18 @@ export async function LogsContextMenuHandler(interaction) {
             Cache.set(`log_delete_${interaction.user.id}_${messageId}`, response.data.id)
 
             let repliedInteraction = await interaction.guild.channels.cache.get(process.env.GUDA_LOG_BOT_CHANNEL).send(
-                LogsDeleteContextMessageActionBuilder(`https://discord.com/channels/${process.env.GUILD_ID}/${process.env.GUDA_LOG_NOTIFICATION_CHANNEL}/${messageId}`, interaction)
+                LogsDeleteContextMessageActionBuilder(
+                    interaction,
+                    `https://discord.com/channels/${process.env.GUILD_ID}/${process.env.GUDA_LOG_NOTIFICATION_CHANNEL}/${messageId}`
+                )
             )
 
             setTimeout(async function () {
-                repliedInteraction.delete()
+                try {
+                    await repliedInteraction.delete()
+                } catch (e) {
+                    // prevent from throwing error
+                }
             }, 30000)
 
             await interaction.reply({

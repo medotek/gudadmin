@@ -64,7 +64,6 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
             let _data = '';
             if (origin === 'context' && interaction.hasOwnProperty('targetId') && typeof interaction.targetId !== 'undefined') {
                 let response = await fetchResponse(`logs/get/${interaction.targetId}`, false)
-                console.log(response)
                 if (typeof response !== 'object' || !response.hasOwnProperty('success') || !response.hasOwnProperty('data'))
                     return false;
 
@@ -231,14 +230,14 @@ export async function LogsCreateActionBuilderStep3(interaction) {
     return modal;
 }
 
-export async function LogsUpdateActionBuilder(interaction) {
+export async function LogsSelectActionBuilder(interaction, action = 'update') {
     /** @var {array} logs */
     let logs = await fetchResponse(`logs`, true)
     if (!Array.isArray(logs) || !logs.length) return false
 
     let embed = new EmbedBuilder();
     embed.setDescription(interaction.message.embeds[0].description)
-        .addFields({name: 'Action courante', value: 'Modifier un log'},)
+        .addFields({name: 'Action courante', value: (action ===  'delete' ? 'Supprimer' :'Modifier') + ' un log'},)
 
     let buttonsMenuBuilderRow = new ActionRowBuilder().addComponents(new ButtonBuilder()
         .setCustomId('logs-return-action')
@@ -246,14 +245,16 @@ export async function LogsUpdateActionBuilder(interaction) {
         .setStyle(ButtonStyle.Secondary))
 
     let selectMenu = new StringSelectMenuBuilder()
-        .setCustomId('update-log-select')
+        .setCustomId((action ===  'delete' ? 'delete' :'update')  + '-log-select')
         .setPlaceholder('Choisissez le log')
 
     // Add options
-    let array = logs.slice(0, 5)
+    let array = logs.slice(0, (action ===  'delete' ? 10 : 5))
     array.forEach(function (item) {
         selectMenu.addOptions({
-            label: item.title, value: item.id.toString()
+            label: item.title.substring(0, 100),
+            description: `ID : ${item.id} | Version : ${item.version.number} | Type : ${item.type}`.substring(0, 100),
+            value: item.id.toString()
         })
     })
 
@@ -264,7 +265,7 @@ export async function LogsUpdateActionBuilder(interaction) {
     }
 }
 
-export function LogsDeleteContextMessageActionBuilder(messageUrl, interaction) {
+export function LogsDeleteContextMessageActionBuilder(interaction, messageUrl = null) {
     let embed = new EmbedBuilder();
     embed.setDescription("Etes-vous sûr de supprimer le log ?")
 
@@ -278,7 +279,7 @@ export function LogsDeleteContextMessageActionBuilder(messageUrl, interaction) {
             .setStyle(ButtonStyle.Secondary))
 
     return {
-        content: `> Action demandée par <@${interaction.user.id}> | Suppression du log ${messageUrl}`,
+        content: `> Action demandée par <@${interaction.user.id}> | Suppression du log ${messageUrl ?? ''}`,
         embeds: [embed],
         components: [buttons]
     }

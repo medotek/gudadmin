@@ -12,7 +12,8 @@ export async function LogsInteractionHandler(commandName, interaction) {
     if (commandName === 'logs') {
         let replyObj = {
             embeds: [LogsEmbed()],
-            components: LogsActionsManagementBuilder()
+            components: LogsActionsManagementBuilder(),
+            ephemeral: true
         }
 
         return interaction.reply(replyObj)
