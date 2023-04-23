@@ -1,12 +1,12 @@
 import {Logs} from "../../../Components/logs.js";
 import {ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder} from "discord.js";
+
 /**
  * Handling log creation on modal submit
  * @param interaction
  * @returns {Promise<*|boolean>}
- * @constructor
  */
-export async function LogsCreationSubmitModalHandler(interaction) {
+export async function LogsCreation(interaction) {
     // Accept submission from log creations only
     if (interaction.customId !== 'logs-create-modal') return false;
     let title = interaction.fields.getTextInputValue('logs-create-modal-title')
@@ -58,8 +58,13 @@ export async function LogsCreationSubmitModalHandler(interaction) {
     return await interaction.update(interactionUpdate)
 }
 
-
-export async function LogsUpdateSubmitModalHandler(interaction) {
+/**
+ * Handling log modification on modal submit
+ * @param interaction
+ * @returns {Promise<*|boolean>}
+ */
+export async function LogsUpdate(interaction) {
+    if (interaction.customId !== 'logs-update-modal') return;
     // Get description from the submitted modal
     let description = interaction.fields.getTextInputValue('logs-update-description')
     let url = interaction.fields.getTextInputValue('logs-update-url')

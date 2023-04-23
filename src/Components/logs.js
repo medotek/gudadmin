@@ -49,7 +49,7 @@ export class Logs {
         } else {
             if (stepNumber === 1) return false;
 
-            // STEPS 2, 3, 5
+            // STEPS 2 to 5
             logsOjb = await Cache.retrieve(cacheId)
 
             if (logsOjb) {

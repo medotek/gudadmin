@@ -7,9 +7,21 @@ export function LogsEmbed() {
 }
 
 export function LogsNotificationEmbed(data) {
-    return new EmbedBuilder()
+    let embed = new EmbedBuilder()
         .setColor(0xf2d77c)
         .setTitle(data.title)
         .setDescription(data.description)
-        .setURL(data.url)
+
+    if (typeof data.url !== 'undefined' && data.url) {
+        embed.setURL(data.url)
+    }
+
+    return embed
+}
+
+export function ErrorEmbed(interaction, error) {
+    return new EmbedBuilder()
+        .setTitle('Une erreur est survenue')
+        .setDescription(error.message)
+        .setFields({name: 'Action', value: `${interaction.customId} - TYPE : ${interaction.type}`})
 }

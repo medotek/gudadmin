@@ -25,14 +25,10 @@ export async function LogsButtonInteractionHandler(interaction) {
             // STEP 4 - NOTIFICATION
             case 'logs-notification-action-true':
                 // Final step - return content only
-                let result1 = await logNotificationDTO(interaction, true)
-                if (result1 && typeof result1 === 'string')
-                    await interaction.update({content: result1, embeds: [], components: []})
+                await handleLogNotification(interaction, true)
                 break;
             case 'logs-notification-action-false':
-                let result2 = await logNotificationDTO(interaction, false)
-                if (result2 && typeof result2 === 'string')
-                    await interaction.update({content: result2, embeds: [], components: []})
+                await handleLogNotification(interaction, false)
                 break;
             case 'logs-delete':
                 let deleteInteraction = await LogsSelectActionBuilder(interaction, 'delete')
@@ -117,4 +113,17 @@ async function logNotificationDTO(interaction, notification = false) {
 
     // STEP 4
     return await Logs.create(4, interaction.user.id, interaction.message.id, notification)
+}
+
+/**
+ * @param interaction
+ * @param bool
+ * @returns {Promise<void>}
+ */
+async function handleLogNotification(interaction, bool) {
+    let result = await logNotificationDTO(interaction, bool)
+    if (result && typeof result === 'string')
+        await interaction.update({content: result, embeds: [], components: []})
+    else
+        await interaction.update({content: "Une erreur est survenue lors de la création du log", embeds: [], components: []})
 }

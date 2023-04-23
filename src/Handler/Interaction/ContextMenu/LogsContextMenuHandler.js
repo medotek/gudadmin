@@ -8,7 +8,7 @@ import {Cache} from "../../../Module/Cache.js";
 
 config();
 
-export async function LogsContextMenuHandler(interaction) {
+export default async function LogsContextMenuHandler(interaction) {
     switch (interaction.commandName) {
         case 'Modifier':
             let modal = await LogsCRUDModalBuilder(interaction)

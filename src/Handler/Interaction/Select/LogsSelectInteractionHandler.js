@@ -5,6 +5,7 @@ import {
 } from "../../../Builder/Action/CommandActionBuilder.js";
 import {Cache} from "../../../Module/Cache.js";
 import {fetchResponse} from "../../../Request/Command/Logs.js";
+import {ErrorEmbed} from "../../../Builder/EmbedBuilder.js";
 
 export async function LogsSelectInteractionHandler(interaction) {
     let value = interaction.values[0]
@@ -15,7 +16,7 @@ export async function LogsSelectInteractionHandler(interaction) {
                 let newInteraction1 = await LogsCreateActionBuilderStep2(interaction)
                 await interaction.update(newInteraction1)
             } else {
-                await interaction.update({content: 'Error', components: [], embeds: []})
+                await interaction.update({content: '', components: [], embeds: [ErrorEmbed(interaction, {message: "STEP 1"})]})
             }
             break
 
@@ -25,7 +26,7 @@ export async function LogsSelectInteractionHandler(interaction) {
                 let newInteraction2 = await LogsCreateActionBuilderStep3(interaction)
                 await interaction.showModal(newInteraction2)
             } else {
-                await interaction.update({content: 'Error', components: [], embeds: []})
+                await interaction.update({content: '', components: [], embeds: [ErrorEmbed(interaction, {message: "STEP 2"})]})
             }
             break
 

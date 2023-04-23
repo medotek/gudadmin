@@ -25,7 +25,8 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
         switch (logsOjb.type) {
             case 'website':
                 canBeNotifiedInDiscord = true;
-                message = {content: logsNotificationRole(logsOjb.type) + "\n\n" + ` ${logsOjb.description}` + "\n" + logsOjb.url}
+                let content = logsNotificationRole(logsOjb.type) + "\n\n" + ` ${logsOjb.description}` + "\n" + (logsOjb.url ?? '')
+                message = {content: content}
                 break;
             case 'discord':
                 canBeNotifiedInDiscord = true;
@@ -42,13 +43,17 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
             messageUrl = `https://discord.com/channels/${sentMessage.guildId}/${sentMessage.channelId}/${sentMessage.id}`
         }
 
+        console.log(logsOjb)
+
         // Create logs
         let response = await fetchResponse('logs/create', false, logsOjb, 'POST')
         if (!response) return false
 
         if (typeof response !== 'object'
             || !response.hasOwnProperty('success')
-            || !response.hasOwnProperty('message'))
+            || !response.hasOwnProperty('message')
+            || !response.success
+        )
             return false
 
         // Clear log obj
@@ -57,6 +62,8 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
         return response.message + ' ' + messageUrl
 
     } catch (e) {
+        // TODO : handle url validation on error
+        console.error(e)
         return e.toString()
     }
 }
