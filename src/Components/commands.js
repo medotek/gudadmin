@@ -13,7 +13,6 @@ import {Gudalog} from "../Module/Guda.js";
 export const Commands = (client, sequelize) => {
     client.on('interactionCreate', async interaction => {
         try {
-            d
             if (!interaction.member.permissions.has("ADMINISTRATOR") || !interaction.member.roles.cache.some(r => r.id === process.env.GUDA_LOG_ALLOWED_ROLE))
                 return await interaction.reply({content: "Mais qui es-tu ?", ephemeral: true});
 
