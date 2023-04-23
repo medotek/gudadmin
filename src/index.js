@@ -1,13 +1,13 @@
-import {config} from 'dotenv'
 // Init dotenv config
+import {config} from 'dotenv'
 config()
 // Import modules
 import {ActivityType, Client, GatewayIntentBits, Partials} from 'discord.js'
-
-export const client = new Client({intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel]});
 // Import commands
 import {Commands} from './Components/commands.js'
 import {deployCommands} from "./Scripts/deploy-commands.js";
+
+export const client = new Client({intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel]});
 
 await deployCommands()
 

@@ -3,6 +3,7 @@ import {client} from "../../index.js";
 import {LogsNotificationEmbed} from "../../Builder/EmbedBuilder.js";
 import {logsNotificationRole} from "../../Helper/NotificationRole.js";
 import {Cache} from "../../Module/Cache.js";
+import {Gudalog} from "../../Module/Guda.js";
 
 /**
  * Processing log creation
@@ -43,8 +44,6 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
             messageUrl = `https://discord.com/channels/${sentMessage.guildId}/${sentMessage.channelId}/${sentMessage.id}`
         }
 
-        console.log(logsOjb)
-
         // Create logs
         let response = await fetchResponse('logs/create', false, logsOjb, 'POST')
         if (!response) return false
@@ -60,10 +59,15 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
         Cache.clear(cacheId)
 
         return response.message + ' ' + messageUrl
-
     } catch (e) {
-        // TODO : handle url validation on error
-        console.error(e)
-        return e.toString()
+        // Logger
+        await Gudalog.error(e.message, {
+            location: `Request/logs.js`,
+            data: logsOjb,
+            cacheId: cacheId,
+            step: stepNumber
+        })
+
+        return false
     }
 }

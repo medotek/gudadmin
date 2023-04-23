@@ -7,12 +7,13 @@ import {
     LogsCreation,
     LogsUpdate
 } from "../Handler/Interaction/Modal/LogsModalHandler.js";
-import {EmbedBuilder} from "discord.js";
 import {ErrorEmbed} from "../Builder/EmbedBuilder.js";
+import {Gudalog} from "../Module/Guda.js";
 
 export const Commands = (client, sequelize) => {
     client.on('interactionCreate', async interaction => {
         try {
+            d
             if (!interaction.member.permissions.has("ADMINISTRATOR") || !interaction.member.roles.cache.some(r => r.id === process.env.GUDA_LOG_ALLOWED_ROLE))
                 return await interaction.reply({content: "Mais qui es-tu ?", ephemeral: true});
 
@@ -56,12 +57,15 @@ export const Commands = (client, sequelize) => {
             }
         } catch (e) {
             /***********************************/
-            /************* ON ERROR ************/
+            /*********** CATCH ERROR ***********/
             /***********************************/
             await interaction.reply({
                 ephemeral: true,
                 embeds: [ErrorEmbed(interaction, e)]
             })
+
+            // Logger
+            await Gudalog.error(e.message, {location: `commands.js`, interaction: interaction.toString()})
         }
     })
 }

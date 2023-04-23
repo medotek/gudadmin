@@ -1,6 +1,6 @@
 import {request} from 'undici'
 import {config} from 'dotenv'
-import {GudaToken} from "../../Module/GudaToken.js"
+import {GudaToken, Gudalog} from "../../Module/Guda.js"
 
 config()
 
@@ -19,6 +19,15 @@ export async function fetchResponse(endpoint, isPublic = false, data = null, met
     return await body.json().then(res => {
         return res
     }).catch(err => {
+        // Logger
+        Gudalog.error(err.message, {
+            location: `Request/Commands/Logs.js`,
+            data: data,
+            method: method,
+            isPublic: isPublic,
+            endpoint: endpoint
+        })
+
         return null
     });
 }

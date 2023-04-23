@@ -1,5 +1,6 @@
 import {request} from 'undici'
 import {config} from 'dotenv'
+import {Gudalog} from "../Module/Guda.js";
 
 config()
 
@@ -40,14 +41,32 @@ export class GudaTokenService {
                         return null
                     }
                 }).catch(err => {
+                    // Logger
+                    Gudalog.error(err.message, {
+                        location: `Services/GudaTokenService.js`,
+                        lastTimeUpdate: this.lastTimeUpdate,
+                        statusCode: statusCode,
+                        body:body
+                    })
+
                     return null
                 })
             } else {
-                // TODO : log message on discord
+                // Logger
+                await Gudalog.error("Cannot retrieve credentials", {
+                    location: `Services/GudaTokenService.js:34`,
+                    statusCode: statusCode,
+                    body: body
+                })
+
                 this.gudapiToken = null
             }
         } catch (e) {
-            console.error(e)
+            // Logger
+            await Gudalog.error(e.message, {
+                location: `Services/GudaTokenService.js`,
+                lastTimeUpdate: this.lastTimeUpdate
+            })
         }
     }
 
