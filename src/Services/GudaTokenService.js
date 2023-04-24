@@ -41,32 +41,13 @@ export class GudaTokenService {
                         return null
                     }
                 }).catch(err => {
-                    // Logger
-                    Gudalog.error(err.message, {
-                        location: `Services/GudaTokenService.js`,
-                        lastTimeUpdate: this.lastTimeUpdate,
-                        statusCode: statusCode,
-                        body:body
-                    })
-
                     return null
                 })
             } else {
-                // Logger
-                await Gudalog.error("Cannot retrieve credentials", {
-                    location: `Services/GudaTokenService.js:34`,
-                    statusCode: statusCode,
-                    body: body
-                })
-
                 this.gudapiToken = null
             }
         } catch (e) {
-            // Logger
-            await Gudalog.error(e.message, {
-                location: `Services/GudaTokenService.js`,
-                lastTimeUpdate: this.lastTimeUpdate
-            })
+            // TODO : cannot call gudalog before initialization
         }
     }
 

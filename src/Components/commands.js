@@ -13,8 +13,17 @@ import {Gudalog} from "../Module/Guda.js";
 export const Commands = (client, sequelize) => {
     client.on('interactionCreate', async interaction => {
         try {
-            if (!interaction.member.permissions.has("ADMINISTRATOR") || !interaction.member.roles.cache.some(r => r.id === process.env.GUDA_LOG_ALLOWED_ROLE))
-                return await interaction.reply({content: "Mais qui es-tu ?", ephemeral: true});
+            if (!interaction.member.permissions.has("ADMINISTRATOR")) {
+                let roles = process.env.GUDA_LOG_ALLOWED_ROLES.split(',')
+                let allowed = false;
+                for (const roleId of roles) {
+                    if (!allowed)
+                        allowed = interaction.member.roles.cache.some(r => r.id === roleId)
+                }
+
+                if (!allowed)
+                    return await interaction.reply({content: "Mais qui es-tu ?", ephemeral: true});
+            }
 
             /**************************************/
             /******** MESSAGE CONTEXT MENU ********/
