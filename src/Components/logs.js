@@ -3,6 +3,7 @@ import {logsCreationRequestHandler} from "../Handler/Request/logs.js";
 import {fetchResponse} from "../Request/Command/Logs.js";
 import {client} from "../index.js";
 import {LogsNotificationEmbed} from "../Builder/EmbedBuilder.js";
+import {logsNotificationRole} from "../Helper/NotificationRole.js";
 
 export class Logs {
 
@@ -115,7 +116,15 @@ export class Logs {
             let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
             let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
             let message = await notificationChannel.messages.fetch(updatedLog.data.messageId)
-            let content = {embeds: [LogsNotificationEmbed(updatedLog.data)]}
+
+            // Manage content for website notification
+            let content = {}
+            if (updatedLog.data.type === 'website') {
+                content = {content: logsNotificationRole(updatedLog.data.type) + "\n\n" + ` ${updatedLog.data.description}` + "\n" + (updatedLog.data.url ?? '')}
+            } else {
+                content = {embeds: [LogsNotificationEmbed(updatedLog.data)]}
+            }
+
             if (message) message.edit(content)
             // Flush cache
             await Cache.clear(`log_update_${userId}`)
