@@ -2,7 +2,7 @@ import {Cache} from "../Module/Cache.js";
 import {logsCreationRequestHandler} from "../Handler/Request/logs.js";
 import {fetchResponse} from "../Request/Command/Logs.js";
 import {client} from "../index.js";
-import {LogsNotificationEmbed} from "../Builder/EmbedBuilder.js";
+import {DiscordLogsNotificationEmbed, LogsNotificationEmbed} from "../Builder/EmbedBuilder.js";
 import {logsNotificationRole} from "../Helper/NotificationRole.js";
 
 export class Logs {
@@ -41,7 +41,10 @@ export class Logs {
                 description: null,
                 url: null,
                 type: null,
-                notification: false
+                notification: false,
+                notificationDescription: null,
+                kind: null,
+                isAnUpdate: false
             }
 
             Cache.set(cacheId, logsOjb);
@@ -58,32 +61,39 @@ export class Logs {
 
                 switch (stepNumber) {
                     case 2:
-                        /** STEP 2 - SET TYPE */
+                        /** STEP 2 - IS AN UPDATE ? */
+                            logsOjb.isAnUpdate = Boolean(value)
+                        break;
+                    case 3:
+                        /** STEP 3 - SET TYPE */
                         if (value)
                             logsOjb.type = value
                         break
-                    case 3:
-                        /** STEP 3 - MODAL - SET TITLE, DESCRIPTION, URL */
+                    case 4:
+                        /** STEP 4 - MODAL - SET TITLE, DESCRIPTION, URL */
                         if (typeof value === 'object'
                             && value.hasOwnProperty('title')
                             && value.hasOwnProperty('description')
                             && value.hasOwnProperty('url')
+                            && value.hasOwnProperty('kind')
                         ) {
                             logsOjb.title = value.title
                             logsOjb.description = value.description
                             logsOjb.url = value.url
+                            logsOjb.kind = value.kind
                         } else {
                             return false;
                         }
                         break;
-                    case 4:
-                        /** STEP 4 - SET NOTIFICATION */
+                    case 5:
+                        /** STEP 5 - SET NOTIFICATION */
                         if (typeof value === 'boolean')
                             logsOjb.notification = value
                 }
 
                 Cache.set(cacheId, logsOjb);
 
+                // Return true unless it's the last step (5)
                 return logsCreationRequestHandler(logsOjb, cacheId, stepNumber);
             }
 
@@ -91,9 +101,7 @@ export class Logs {
         }
     }
 
-    static async update(userId, obj) {
-        let cachedLog = await Cache.retrieve(`log_update_${userId}`)
-
+    static async update(userId, obj, cachedLog) {
         if (!cachedLog
             || typeof cachedLog !== 'object'
             || !cachedLog.hasOwnProperty('id')
@@ -103,7 +111,8 @@ export class Logs {
         let updatedLog = await fetchResponse(`logs/update`, false, {
             id: cachedLog.id,
             description: obj.description,
-            url: obj.url
+            url: obj.url,
+            kind: obj.kind,
         }, 'PUT')
 
         /**
@@ -119,10 +128,11 @@ export class Logs {
 
             // Manage content for website notification
             let content = {}
-            if (updatedLog.data.type === 'website') {
+
+            if (!updatedLog.data.isAnUpdate) {
                 content = {content: logsNotificationRole(updatedLog.data.type) + "\n\n" + ` ${updatedLog.data.description}` + "\n" + (updatedLog.data.url ?? '')}
             } else {
-                content = {embeds: [LogsNotificationEmbed(updatedLog.data)]}
+                content = {embeds: [DiscordLogsNotificationEmbed(updatedLog.data, "**[Mise à jour]**")]}
             }
 
             if (message) message.edit(content)

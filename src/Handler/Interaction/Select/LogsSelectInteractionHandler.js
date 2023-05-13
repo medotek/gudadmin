@@ -1,7 +1,8 @@
 import {Logs} from "../../../Components/logs.js";
 import {
-    LogsCreateActionBuilderStep2,
-    LogsCreateActionBuilderStep3, LogsCRUDModalBuilder, LogsDeleteContextMessageActionBuilder
+    LogsCreateActionBuilderStep2, LogsCreateActionBuilderStep4,
+    LogsCRUDModalBuilder,
+    LogsDeleteContextMessageActionBuilder
 } from "../../../Builder/Action/CommandActionBuilder.js";
 import {Cache} from "../../../Module/Cache.js";
 import {fetchResponse} from "../../../Request/Command/Logs.js";
@@ -13,8 +14,8 @@ export async function LogsSelectInteractionHandler(interaction) {
         case 'create-log-version':
 
             if (await Logs.create(1, interaction.user.id, interaction.message.id, value)) {
-                let newInteraction1 = await LogsCreateActionBuilderStep2(interaction)
-                await interaction.update(newInteraction1)
+                let choicesInteraction = await LogsCreateActionBuilderStep2(interaction)
+                await interaction.update(choicesInteraction)
             } else {
                 await interaction.update({content: '', components: [], embeds: [ErrorEmbed(interaction, {message: "STEP 1"})]})
             }
@@ -22,8 +23,8 @@ export async function LogsSelectInteractionHandler(interaction) {
 
         case 'create-log-type':
 
-            if (await Logs.create(2, interaction.user.id, interaction.message.id, value)) {
-                let newInteraction2 = await LogsCreateActionBuilderStep3(interaction)
+            if (await Logs.create(3, interaction.user.id, interaction.message.id, value)) {
+                let newInteraction2 = await LogsCreateActionBuilderStep4(interaction)
                 await interaction.showModal(newInteraction2)
             } else {
                 await interaction.update({content: '', components: [], embeds: [ErrorEmbed(interaction, {message: "STEP 2"})]})
@@ -72,6 +73,7 @@ export async function LogsSelectInteractionHandler(interaction) {
                 } catch (e) {
                     // prevent from throwing error
                 }
+                // Delete after the passed 30 secs
             }, 30000)
 
             await interaction.reply({

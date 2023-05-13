@@ -1,5 +1,6 @@
 import {
     LogsCreateActionBuilderStep1,
+    LogsCreateActionBuilderStep3,
     LogsSelectActionBuilder
 } from "../../../Builder/Action/CommandActionBuilder.js";
 import {Logs} from "../../../Components/logs.js";
@@ -17,26 +18,41 @@ export async function LogsButtonInteractionHandler(interaction) {
             case 'logs-create':
                 let newInteraction = await LogsCreateActionBuilderStep1(interaction)
                 await interaction.update(newInteraction)
-                break;
+                return;
             case 'logs-update':
                 let updateInteraction = await LogsSelectActionBuilder(interaction, 'update')
                 await interaction.update(updateInteraction)
+                return;
+            // STEP 3 - Is an update ?
+            case 'create-log-add-status':
+                if (await Logs.create(2, interaction.user.id, interaction.message.id, false)) {
+                    let add = await LogsCreateActionBuilderStep3(interaction)
+                    await interaction.update(add)
+                    return;
+                }
                 break;
-            // STEP 4 - NOTIFICATION
+            case 'create-log-update-status':
+                if (await Logs.create(2, interaction.user.id, interaction.message.id, true)) {
+                    let add = await LogsCreateActionBuilderStep3(interaction)
+                    await interaction.update(add)
+                    return;
+                }
+                break;
+            // STEP 5 - NOTIFICATION
             case 'logs-notification-action-true':
                 // Final step - return content only
                 await handleLogNotification(interaction, true)
-                break;
+                return;
             case 'logs-notification-action-false':
                 await handleLogNotification(interaction, false)
-                break;
+                return;
             case 'logs-delete':
                 let deleteInteraction = await LogsSelectActionBuilder(interaction, 'delete')
                 await interaction.update(deleteInteraction)
-                break;
-            default:
-                await interaction.reply({content: 'Error thrown', ephemeral: true})
+                return;
         }
+
+        return await interaction.reply({content: 'Error thrown', ephemeral: true})
     } else {
         if (!interaction.customId) {
             return await interaction.reply({content: 'No custom id found', ephemeral: true})
@@ -105,14 +121,13 @@ export async function LogsButtonInteractionHandler(interaction) {
  * STEP 4 - Notification DTO - at creation only
  * @param interaction
  * @param notification
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean|string>}
  */
 async function logNotificationDTO(interaction, notification = false) {
     let currentLog = await Logs.getCachedLog(interaction)
     if (!currentLog) return false;
-
-    // STEP 4
-    return await Logs.create(4, interaction.user.id, interaction.message.id, notification)
+    // STEP 5
+    return await Logs.create(5, interaction.user.id, interaction.message.id, notification)
 }
 
 /**
@@ -122,8 +137,13 @@ async function logNotificationDTO(interaction, notification = false) {
  */
 async function handleLogNotification(interaction, bool) {
     let result = await logNotificationDTO(interaction, bool)
-    if (result && typeof result === 'string')
+    if (result && typeof result === 'string') {
         await interaction.update({content: result, embeds: [], components: []})
-    else
-        await interaction.update({content: "Une erreur est survenue lors de la création du log", embeds: [], components: []})
+    } else {
+        await interaction.update({
+            content: "Une erreur est survenue lors de la création du log",
+            embeds: [],
+            components: []
+        })
+    }
 }

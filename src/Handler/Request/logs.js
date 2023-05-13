@@ -1,6 +1,6 @@
 import {fetchResponse} from "../../Request/Command/Logs.js";
 import {client} from "../../index.js";
-import {LogsNotificationEmbed} from "../../Builder/EmbedBuilder.js";
+import {DiscordLogsNotificationEmbed, LogsNotificationEmbed} from "../../Builder/EmbedBuilder.js";
 import {logsNotificationRole} from "../../Helper/NotificationRole.js";
 import {Cache} from "../../Module/Cache.js";
 import {Gudalog} from "../../Module/Guda.js";
@@ -14,20 +14,24 @@ import {Gudalog} from "../../Module/Guda.js";
  */
 export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 0) {
     // Verify if it's the right step
-    if (stepNumber !== 4) return true;
+    if (stepNumber !== 5) return true;
 
     try {
-        // Notify on discord
         let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
         let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
         let message = {embeds: [LogsNotificationEmbed(logsOjb)]}
+        // Default notification for a kind (website, discord)
         let canBeNotifiedInDiscord = false
 
         switch (logsOjb.type) {
             case 'website':
                 canBeNotifiedInDiscord = true;
-                let content = logsNotificationRole(logsOjb.type) + "\n\n" + ` ${logsOjb.description}` + "\n" + (logsOjb.url ?? '')
-                message = {content: content}
+                if (!logsOjb.isAnUpdate) {
+                    message = {content: logsNotificationRole(logsOjb.type) + "\n\n" + ` ${logsOjb.description}` + "\n" + (logsOjb.url ?? '')}
+                } else {
+                    message = {embeds: [DiscordLogsNotificationEmbed(logsOjb, "**[Mise à jour]**")]}
+                }
+
                 break;
             case 'discord':
                 canBeNotifiedInDiscord = true;

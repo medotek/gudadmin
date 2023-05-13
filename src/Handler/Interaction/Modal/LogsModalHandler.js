@@ -1,5 +1,6 @@
 import {Logs} from "../../../Components/logs.js";
 import {ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder} from "discord.js";
+import {Cache} from "../../../Module/Cache.js";
 
 /**
  * Handling log creation on modal submit
@@ -7,11 +8,7 @@ import {ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder} from "discor
  * @returns {Promise<*|boolean>}
  */
 export async function LogsCreation(interaction) {
-    // Accept submission from log creations only
     if (interaction.customId !== 'logs-create-modal') return false;
-    let title = interaction.fields.getTextInputValue('logs-create-modal-title')
-    let description = interaction.fields.getTextInputValue('logs-create-modal-description')
-    let url = interaction.fields.getTextInputValue('logs-create-modal-link')
 
     /**
      * Get cached log
@@ -20,14 +17,20 @@ export async function LogsCreation(interaction) {
     let logObj = await Logs.getCachedLog(interaction, 'create')
     if (!logObj) return false;
 
+    // Accept submission from log creations only
+    let title = interaction.fields.getTextInputValue('logs-create-modal-title')
+    let description = logObj.isAnUpdate ? interaction.fields.getTextInputValue('logs-create-modal-description') : null
+    let url = !logObj.isAnUpdate ? interaction.fields.getTextInputValue('logs-create-modal-link') : null
+    let kind =  logObj.type === 'website' ? interaction.fields.getTextInputValue('logs-create-modal-kind') : null
+
     let interactionUpdate = {
         content: 'error',
         embeds: [],
         components: []
     }
 
-    if (await Logs.create(3, interaction.user.id, interaction.message.id, {
-        title: title, description: description, url: url
+    if (await Logs.create(4, interaction.user.id, interaction.message.id, {
+        title: title, description: description, url: url, kind: kind
     })) {
         let embed = new EmbedBuilder();
         embed.setDescription(interaction.message.embeds[0].description)
@@ -65,11 +68,19 @@ export async function LogsCreation(interaction) {
  */
 export async function LogsUpdate(interaction) {
     if (interaction.customId !== 'logs-update-modal') return;
-    // Get description from the submitted modal
-    let description = interaction.fields.getTextInputValue('logs-update-description')
-    let url = interaction.fields.getTextInputValue('logs-update-url')
+    let cachedLog = await Cache.retrieve(`log_update_${interaction.user.id}`)
 
-    if (!await Logs.update(interaction.user.id, {description: description, url: url})) {
+    let obj = {}
+    // Get fields values from the submitted modal
+    if (cachedLog.isAnUpdate) {
+        obj.description = interaction.fields.getTextInputValue('logs-update-description')
+        if (cachedLog.type === 'website')
+            obj.kind = interaction.fields.getTextInputValue('logs-update-kind')
+    } else {
+        obj.url = interaction.fields.getTextInputValue('logs-update-url')
+    }
+
+    if (!await Logs.update(interaction.user.id, obj, cachedLog)) {
         return await interaction.reply({content: 'Une erreur est survenue', ephemeral: true})
     }
 

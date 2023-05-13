@@ -9,6 +9,7 @@ import {
 } from "../Handler/Interaction/Modal/LogsModalHandler.js";
 import {ErrorEmbed} from "../Builder/EmbedBuilder.js";
 import {Gudalog} from "../Module/Guda.js";
+import {client} from "../index.js";
 
 export const Commands = (client, sequelize) => {
     client.on('interactionCreate', async interaction => {
@@ -67,11 +68,13 @@ export const Commands = (client, sequelize) => {
             /***********************************/
             /*********** CATCH ERROR ***********/
             /***********************************/
-            await interaction.reply({
-                ephemeral: true,
+            let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
+            let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
+            await notificationChannel.send({
                 embeds: [ErrorEmbed(interaction, e)]
             })
 
+            console.log(e)
             // Logger
             await Gudalog.error(e.message, {location: `commands.js`, interaction: interaction.toString()})
         }

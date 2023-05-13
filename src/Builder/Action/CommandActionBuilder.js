@@ -13,6 +13,7 @@ import {fetchResponse} from "../../Request/Command/Logs.js";
 import {config} from 'dotenv'
 import {Logs} from "../../Components/logs.js";
 import {Cache} from "../../Module/Cache.js";
+
 config()
 
 export function LogsActionsManagementBuilder() {
@@ -29,7 +30,13 @@ export function LogsActionsManagementBuilder() {
             .setStyle(ButtonStyle.Danger),)]
 }
 
-
+/**
+ *
+ * @param interaction
+ * @param origin - Origin of the action (select or message context)
+ * @param id
+ * @returns {Promise<ModalBuilder|boolean>}
+ */
 export async function LogsCRUDModalBuilder(interaction, origin = 'context', id = null) {
     const modal = new ModalBuilder()
         .setCustomId('logs-update-modal')
@@ -52,56 +59,63 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
         .setMaxLength(255)
         .setRequired(false);
 
+    const kind = new TextInputBuilder()
+        .setCustomId('logs-update-kind')
+        .setLabel("Entité")
+        .setStyle(TextInputStyle.Short)
+        .setMinLength(1)
+        .setMaxLength(255)
+        .setRequired(false);
+
+
     /*************************************/
     /******** AUTOCOMPLETE VALUES ********/
     /*************************************/
     if (typeof interaction === 'object') {
         try {
+            let data = '';
 
-            let _title = '';
-            let _description = '';
-            let _url = '';
-            let _data = '';
             if (origin === 'context' && interaction.hasOwnProperty('targetId') && typeof interaction.targetId !== 'undefined') {
                 let response = await fetchResponse(`logs/get/${interaction.targetId}`, false)
                 if (typeof response !== 'object' || !response.hasOwnProperty('success') || !response.hasOwnProperty('data'))
                     return false;
-
-                _title = response.data.title
-                _description = response.data.description
-                _url = response.data.url
-                _data = response.data
+                data = response.data
             } else if (origin === 'select' && id) {
                 let response = await fetchResponse(`logs/${id.toString()}`, true)
                 if (typeof response !== 'object')
                     return false;
-
-                _title = response.title
-                _description = response.description
-                _url = response.url
-                _data = response
+                data = response
             } else {
                 throw new Error('not valid object')
             }
 
-            modal.setTitle(`Modification - ${_title}`)
-            description.setValue(_description)
-            url.setValue(_url)
+            modal.setTitle(`Modification - ${data.title}`)
+
+            if (data?.isAnUpdate) {
+                description.setValue(data.description)
+                modal.addComponents(new ActionRowBuilder().addComponents(description));
+                if (data.type === 'website') {
+                    kind.setValue(data.kind)
+                    modal.addComponents(new ActionRowBuilder().addComponents(kind));
+                }
+            } else {
+                url.setValue(data.url)
+                modal.addComponents(new ActionRowBuilder().addComponents(url));
+            }
 
             // Cache
-            Cache.set(`log_update_${interaction.user.id}`, _data)
+            Cache.set(`log_update_${interaction.user.id}`, data)
+
+            return modal;
         } catch (e) {
+
             console.error(e);
             return false;
+
         }
     }
 
-    modal.addComponents(
-        new ActionRowBuilder().addComponents(description),
-        new ActionRowBuilder().addComponents(url)
-    );
-
-    return modal;
+    return false;
 }
 
 /**
@@ -157,6 +171,39 @@ export async function LogsCreateActionBuilderStep1(interaction) {
 export async function LogsCreateActionBuilderStep2(interaction) {
     let embed = new EmbedBuilder();
     embed.setDescription(interaction.message.embeds[0].description)
+        .addFields({name: 'Action courante', value: 'Est-ce un ajout ou une mise à jour ?'},)
+
+    let buttonsMenuBuilderRow = new ActionRowBuilder().addComponents(new ButtonBuilder()
+        .setCustomId('logs-return-action')
+        .setLabel('Retour')
+        .setStyle(ButtonStyle.Secondary),)
+
+    let add = new ButtonBuilder()
+        .setCustomId('create-log-add-status')
+        .setLabel('Ajout')
+        .setStyle(ButtonStyle.Success)
+    let update = new ButtonBuilder()
+        .setCustomId('create-log-update-status')
+        .setLabel('Mise à jour')
+        .setStyle(ButtonStyle.Primary)
+
+
+    let buttonsBuilderRow = new ActionRowBuilder().addComponents(add, update)
+
+    return {
+        embeds: [embed], components: [buttonsMenuBuilderRow, buttonsBuilderRow]
+    }
+}
+
+
+/**
+ * Logs creation - Step 3
+ * @param interaction
+ * @returns {Promise<{content: string}|{components: ActionRowBuilder<AnyComponentBuilder>[], embeds: EmbedBuilder[]}>}
+ */
+export async function LogsCreateActionBuilderStep3(interaction) {
+    let embed = new EmbedBuilder();
+    embed.setDescription(interaction.message.embeds[0].description)
         .addFields({name: 'Action courante', value: 'Type de log'},)
 
     let buttonsMenuBuilderRow = new ActionRowBuilder().addComponents(new ButtonBuilder()
@@ -188,10 +235,10 @@ export async function LogsCreateActionBuilderStep2(interaction) {
 
 
 /**
- * Logs creation - Step 3
+ * Logs creation - Step 4
  * @param interaction
  */
-export async function LogsCreateActionBuilderStep3(interaction) {
+export async function LogsCreateActionBuilderStep4(interaction) {
 
     let cachedLog = await Logs.getCachedLog(interaction, 'create')
     if (!cachedLog) return false;
@@ -204,28 +251,48 @@ export async function LogsCreateActionBuilderStep3(interaction) {
     const modal = new ModalBuilder()
         .setCustomId('logs-create-modal')
         .setTitle(title);
-
     const modalInputTitle = new TextInputBuilder()
         .setCustomId('logs-create-modal-title')
         .setLabel("Titre")
         .setStyle(TextInputStyle.Short);
-
-    const modalInputDescription = new TextInputBuilder()
-        .setCustomId('logs-create-modal-description')
-        .setLabel("Message")
-        .setStyle(TextInputStyle.Paragraph);
-
-    const modalInputLink = new TextInputBuilder()
-        .setCustomId('logs-create-modal-link')
-        .setLabel("Lien")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false);
-
     const firstActionRow = new ActionRowBuilder().addComponents(modalInputTitle);
-    const secondActionRow = new ActionRowBuilder().addComponents(modalInputDescription);
-    const thirdActionRow = new ActionRowBuilder().addComponents(modalInputLink);
+    modal.addComponents(firstActionRow);
 
-    modal.addComponents(firstActionRow, secondActionRow, thirdActionRow);
+    if (!cachedLog.isAnUpdate) {
+
+        const modalInputLink = new TextInputBuilder()
+            .setCustomId('logs-create-modal-link')
+            .setLabel("Lien")
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false);
+
+        const thirdActionRow = new ActionRowBuilder().addComponents(modalInputLink);
+        modal.addComponents(thirdActionRow);
+
+    } else {
+
+        const modalInputDescription = new TextInputBuilder()
+            .setCustomId('logs-create-modal-description')
+            .setLabel("Message")
+            .setStyle(TextInputStyle.Paragraph);
+
+        const secondActionRow = new ActionRowBuilder().addComponents(modalInputDescription);
+        modal.addComponents(secondActionRow);
+
+    }
+
+    if (cachedLog.type === 'website') {
+
+        const modalInputKind = new TextInputBuilder()
+            .setCustomId('logs-create-modal-kind')
+            .setLabel("Entité")
+            .setPlaceholder("(ex : articles, personnages, fiches personnages, etc...)")
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false);
+        const forthActionRow = new ActionRowBuilder().addComponents(modalInputKind);
+        modal.addComponents(forthActionRow);
+
+    }
 
     return modal;
 }
@@ -237,7 +304,7 @@ export async function LogsSelectActionBuilder(interaction, action = 'update') {
 
     let embed = new EmbedBuilder();
     embed.setDescription(interaction.message.embeds[0].description)
-        .addFields({name: 'Action courante', value: (action ===  'delete' ? 'Supprimer' :'Modifier') + ' un log'},)
+        .addFields({name: 'Action courante', value: (action === 'delete' ? 'Supprimer' : 'Modifier') + ' un log'},)
 
     let buttonsMenuBuilderRow = new ActionRowBuilder().addComponents(new ButtonBuilder()
         .setCustomId('logs-return-action')
@@ -245,11 +312,11 @@ export async function LogsSelectActionBuilder(interaction, action = 'update') {
         .setStyle(ButtonStyle.Secondary))
 
     let selectMenu = new StringSelectMenuBuilder()
-        .setCustomId((action ===  'delete' ? 'delete' :'update')  + '-log-select')
+        .setCustomId((action === 'delete' ? 'delete' : 'update') + '-log-select')
         .setPlaceholder('Choisissez le log')
 
     // Add options
-    let array = logs.slice(0, (action ===  'delete' ? 10 : 5))
+    let array = logs.slice(0, (action === 'delete' ? 10 : 5))
     array.forEach(function (item) {
         selectMenu.addOptions({
             label: item.title.substring(0, 100),
@@ -270,9 +337,9 @@ export function LogsDeleteContextMessageActionBuilder(interaction, messageUrl = 
     embed.setDescription("Etes-vous sûr de supprimer le log ?")
 
     let buttons = new ActionRowBuilder().addComponents(new ButtonBuilder()
-        .setCustomId('logs-delete-confirm')
-        .setLabel('Supprimer')
-        .setStyle(ButtonStyle.Danger),
+            .setCustomId('logs-delete-confirm')
+            .setLabel('Supprimer')
+            .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
             .setCustomId('logs-delete-cancel')
             .setLabel('Annuler')
