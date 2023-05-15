@@ -21,6 +21,7 @@ export async function LogsButtonInteractionHandler(interaction) {
                 return;
             case 'logs-update':
                 let updateInteraction = await LogsSelectActionBuilder(interaction, 'update')
+                if (!updateInteraction) return await interaction.reply({content: 'No log data found', ephemeral: true})
                 await interaction.update(updateInteraction)
                 return;
             // STEP 3 - Is an update ?
@@ -48,6 +49,7 @@ export async function LogsButtonInteractionHandler(interaction) {
                 return;
             case 'logs-delete':
                 let deleteInteraction = await LogsSelectActionBuilder(interaction, 'delete')
+                if (!deleteInteraction) return await interaction.reply({content: 'No log data found', ephemeral: true})
                 await interaction.update(deleteInteraction)
                 return;
         }
