@@ -25,7 +25,7 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
 
         switch (logsOjb.type) {
             case 'website':
-                canBeNotifiedInDiscord = true;
+                canBeNotifiedInDiscord = logsOjb.notification;
                 if (!logsOjb.isAnUpdate) {
                     message = {content: logsNotificationRole(logsOjb.type) + "\n\n" + `Le nouvel article **${logsOjb.title}** est disponible sur le site !` + "\n" + (logsOjb.url ?? '')}
                 } else {
