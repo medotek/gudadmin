@@ -29,6 +29,22 @@ export async function LogsCreation(interaction) {
         components: []
     }
 
+    const isValidUrl = urlString => {
+        const urlPattern = new RegExp('^(https?:\\/\\/)' + // validate protocol
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // validate domain name
+            '((\\d{1,3}\\.){3}\\d{1,3}))' + // validate OR ip (v4) address
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // validate port and path
+            '(\\?[;&a-z\\d%_.~+=-]*)?' + // validate query string
+            '(\\#[-a-z\\d_]*)?$', 'i'); // validate fragment locator
+        return !!urlPattern.test(urlString);
+    }
+
+    if (url && !isValidUrl(url)) {
+        interactionUpdate.content = 'Url non valide'
+        interactionUpdate.ephemeral = true
+        return await interaction.reply(interactionUpdate)
+    }
+
     if (await Logs.create(4, interaction.user.id, interaction.message.id, {
         title: title, description: description, url: url, kind: kind
     })) {

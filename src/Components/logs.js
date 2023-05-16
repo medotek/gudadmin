@@ -62,7 +62,7 @@ export class Logs {
                 switch (stepNumber) {
                     case 2:
                         /** STEP 2 - IS AN UPDATE ? */
-                            logsOjb.isAnUpdate = Boolean(value)
+                            logsOjb.isAnUpdate = value
                         break;
                     case 3:
                         /** STEP 3 - SET TYPE */
