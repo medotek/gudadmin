@@ -20,7 +20,7 @@ export function LogsNotificationEmbed(data) {
 }
 
 export function DiscordLogsNotificationEmbed(data, title) {
-    let description = (data.kind ? "**${data.kind}** \n\n" : "");
+    let description = (data.kind ? `**${data.kind}** \n\n` : "");
     description += data.description
     let embed = new EmbedBuilder()
         .setColor(0xf2d77c)
