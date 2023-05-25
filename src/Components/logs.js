@@ -120,22 +120,26 @@ export class Logs {
          */
         if (updatedLog
             && (updatedLog.hasOwnProperty('success') && updatedLog.success)
-            && (updatedLog.hasOwnProperty('data') && updatedLog.data.messageId)
+            && (updatedLog.hasOwnProperty('data'))
         ) {
-            let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
-            let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
-            let message = await notificationChannel.messages.fetch(updatedLog.data.messageId)
+            // Update notification
+            if (updatedLog.data.messageId) {
+                let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
+                let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
+                let message = await notificationChannel.messages.fetch(updatedLog.data.messageId)
 
-            // Manage content for website notification
-            let content = {}
+                // Manage content for website notification
+                let content = {}
 
-            if (!updatedLog.data.isAnUpdate) {
-                content = {content: logsNotificationRole(updatedLog.data.type) + "\n\n" + ` ${updatedLog.data.description}` + "\n" + (updatedLog.data.url ?? '')}
-            } else {
-                content = {embeds: [DiscordLogsNotificationEmbed(updatedLog.data, "**[Mise à jour]**")]}
+                if (!updatedLog.data.isAnUpdate) {
+                    content = {content: logsNotificationRole(updatedLog.data.type) + "\n\n" + ` ${updatedLog.data.description}` + "\n" + (updatedLog.data.url ?? '')}
+                } else {
+                    content = {embeds: [DiscordLogsNotificationEmbed(updatedLog.data, "**[Mise à jour]**")]}
+                }
+
+                if (message) message.edit(content)
             }
 
-            if (message) message.edit(content)
             // Flush cache
             await Cache.clear(`log_update_${userId}`)
 

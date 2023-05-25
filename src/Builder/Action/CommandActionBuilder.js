@@ -47,7 +47,6 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
         .setLabel("Description")
         // Paragraph means multiple lines of text.
         .setStyle(TextInputStyle.Paragraph)
-        .setMinLength(1)
         .setMaxLength(255);
 
     const url = new TextInputBuilder()
@@ -55,7 +54,6 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
         .setLabel("URL")
         // Paragraph means multiple lines of text.
         .setStyle(TextInputStyle.Paragraph)
-        .setMinLength(1)
         .setMaxLength(255)
         .setRequired(false);
 
@@ -63,7 +61,6 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
         .setCustomId('logs-update-kind')
         .setLabel("Entité")
         .setStyle(TextInputStyle.Short)
-        .setMinLength(1)
         .setMaxLength(255)
         .setRequired(false);
 
@@ -254,7 +251,8 @@ export async function LogsCreateActionBuilderStep4(interaction) {
     const modalInputTitle = new TextInputBuilder()
         .setCustomId('logs-create-modal-title')
         .setLabel("Titre")
-        .setStyle(TextInputStyle.Short);
+        .setStyle(TextInputStyle.Short)
+        .setMaxLength(256);
     const firstActionRow = new ActionRowBuilder().addComponents(modalInputTitle);
     modal.addComponents(firstActionRow);
 
@@ -264,6 +262,7 @@ export async function LogsCreateActionBuilderStep4(interaction) {
             .setCustomId('logs-create-modal-link')
             .setLabel("Lien")
             .setStyle(TextInputStyle.Short)
+            .setMaxLength(524)
             .setRequired(false);
 
         const thirdActionRow = new ActionRowBuilder().addComponents(modalInputLink);
@@ -274,7 +273,8 @@ export async function LogsCreateActionBuilderStep4(interaction) {
         const modalInputDescription = new TextInputBuilder()
             .setCustomId('logs-create-modal-description')
             .setLabel("Message")
-            .setStyle(TextInputStyle.Paragraph);
+            .setStyle(TextInputStyle.Paragraph)
+            .setMaxLength(1024);
 
         const secondActionRow = new ActionRowBuilder().addComponents(modalInputDescription);
         modal.addComponents(secondActionRow);
@@ -288,7 +288,8 @@ export async function LogsCreateActionBuilderStep4(interaction) {
             .setLabel("Entité")
             .setPlaceholder("(ex : articles, personnages, fiches personnages, etc...)")
             .setStyle(TextInputStyle.Short)
-            .setRequired(false);
+            .setRequired(false)
+            .setMaxLength(100);
         const forthActionRow = new ActionRowBuilder().addComponents(modalInputKind);
         modal.addComponents(forthActionRow);
 
