@@ -69,7 +69,7 @@ export const Commands = (client, sequelize) => {
             /*********** CATCH ERROR ***********/
             /***********************************/
             let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
-            let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
+            let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_BOT_CHANNEL);
             await notificationChannel.send({
                 embeds: [ErrorEmbed(interaction, e)]
             })
