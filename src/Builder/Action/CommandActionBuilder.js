@@ -47,7 +47,7 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
         .setLabel("Description")
         // Paragraph means multiple lines of text.
         .setStyle(TextInputStyle.Paragraph)
-        .setMaxLength(255);
+        .setMaxLength(4000);
 
     const url = new TextInputBuilder()
         .setCustomId('logs-update-url')
