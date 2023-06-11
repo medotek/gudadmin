@@ -256,7 +256,7 @@ export async function LogsCreateActionBuilderStep4(interaction) {
     const firstActionRow = new ActionRowBuilder().addComponents(modalInputTitle);
     modal.addComponents(firstActionRow);
 
-    if (!cachedLog.isAnUpdate) {
+    if (!cachedLog.isAnUpdate && cachedLog.type !== 'discord') {
 
         const modalInputLink = new TextInputBuilder()
             .setCustomId('logs-create-modal-link')

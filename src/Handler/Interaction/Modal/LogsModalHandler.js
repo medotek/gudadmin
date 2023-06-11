@@ -19,24 +19,16 @@ export async function LogsCreation(interaction) {
 
     // Accept submission from log creations only
     let title = interaction.fields.getTextInputValue('logs-create-modal-title')
-    let description = logObj.isAnUpdate ? interaction.fields.getTextInputValue('logs-create-modal-description') : null
-    let url = !logObj.isAnUpdate ? interaction.fields.getTextInputValue('logs-create-modal-link') : null
+    let description = logObj.isAnUpdate || !logObj.isAnUpdate && logObj.type === 'discord' ? interaction.fields.getTextInputValue('logs-create-modal-description') : null
+    let url = null;
+    if (logObj.type !== 'discord')
+        url = !logObj.isAnUpdate ? interaction.fields.getTextInputValue('logs-create-modal-link') : null
     let kind =  logObj.type === 'website' ? interaction.fields.getTextInputValue('logs-create-modal-kind') : null
 
     let interactionUpdate = {
         content: 'error',
         embeds: [],
         components: []
-    }
-
-    const isValidUrl = urlString => {
-        const urlPattern = new RegExp('^(https?:\\/\\/)' + // validate protocol
-            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // validate domain name
-            '((\\d{1,3}\\.){3}\\d{1,3}))' + // validate OR ip (v4) address
-            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // validate port and path
-            '(\\?[;&a-z\\d%_.~+=-]*)?' + // validate query string
-            '(\\#[-a-z\\d_]*)?$', 'i'); // validate fragment locator
-        return !!urlPattern.test(urlString);
     }
 
     if (url && !isValidUrl(url)) {
@@ -101,4 +93,14 @@ export async function LogsUpdate(interaction) {
     }
 
     return await interaction.reply({content: 'Log modifié avec succès', ephemeral: true})
+}
+
+const isValidUrl = urlString => {
+    const urlPattern = new RegExp('^(https?:\\/\\/)' + // validate protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // validate domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))' + // validate OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // validate port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?' + // validate query string
+        '(\\#[-a-z\\d_]*)?$', 'i'); // validate fragment locator
+    return !!urlPattern.test(urlString);
 }
