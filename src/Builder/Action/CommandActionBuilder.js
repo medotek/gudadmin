@@ -86,7 +86,8 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
                 throw new Error('not valid object')
             }
 
-            modal.setTitle(`Modification - ${data.title}`)
+            let title = `Modification - ${data.title}`
+            modal.setTitle(title.slice(0, 45))
 
             if (data?.isAnUpdate) {
                 description.setValue(data.description)
