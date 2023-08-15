@@ -112,7 +112,7 @@ export class Logs {
             id: cachedLog.id,
             description: obj.description,
             url: obj.url,
-            kind: obj.kind,
+            kind: cachedLog.kind,
         }, 'PUT')
 
         /**
@@ -131,8 +131,13 @@ export class Logs {
                 // Manage content for website notification
                 let content = {}
 
+                // Format text for new post on website
+                updatedLog.data.description = !updatedLog.data.description && cachedLog.type === 'website' ?
+                    "Le nouvel article **%s** est disponible sur le site !".replace('%s', updatedLog.data.title)
+                    : updatedLog.data.description;
+
                 if (!updatedLog.data.isAnUpdate) {
-                    content = {content: logsNotificationRole(updatedLog.data.type) + "\n\n" + ` ${updatedLog.data.description}` + "\n" + (updatedLog.data.url ?? '')}
+                    content = {content: logsNotificationRole(updatedLog.data.type) + "\n\n" + `${updatedLog.data.description}` + "\n" + (updatedLog.data.url ?? '')}
                 } else {
                     content = {embeds: [DiscordLogsNotificationEmbed(updatedLog.data, "**[Mise à jour]**")]}
                 }
