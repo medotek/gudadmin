@@ -140,7 +140,8 @@ export async function LogsCreateActionBuilderStep1(interaction) {
 
         let i = 0;
         for (const [key, version] of Object.entries(versions)) {
-            if (!version.hasOwnProperty('number') || !version.hasOwnProperty('id') || i > 2) return
+            if (!version.hasOwnProperty('number') || !version.hasOwnProperty('id') || i > 2)
+                continue;
 
             selectMenu.addOptions({
                 label: version.number.toString(), value: version.id.toString()
