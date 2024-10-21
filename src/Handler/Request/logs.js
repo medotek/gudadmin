@@ -18,8 +18,8 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
 
     try {
         let discordClient = client.guilds.cache.get(process.env.GUILD_ID).client
-        let notificationChannel = discordClient.channels.cache.get(process.env.GUDA_LOG_NOTIFICATION_CHANNEL);
         let message = {embeds: [LogsNotificationEmbed(logsOjb)]}
+        var notificationChannelId = process.env.GUDA_LOG_WEBSITE_NOTIFICATION_CHANNEL
         // Default notification for a kind (website, discord)
         let canBeNotifiedInDiscord = false
 
@@ -31,7 +31,11 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
                 } else {
                     message = {embeds: [DiscordLogsNotificationEmbed(logsOjb, "**[Mise à jour]**")]}
                 }
-
+                break;
+            case 'twitter':
+                message = logsNotificationRole(logsOjb.type) + ' ' + logsOjb.url
+                notificationChannelId = process.env.GUDA_LOG_TWITTER_NOTIFICATION_CHANNEL
+                canBeNotifiedInDiscord = logsOjb.notification;
                 break;
             case 'discord':
                 canBeNotifiedInDiscord = true;
@@ -40,12 +44,13 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
 
         let messageUrl = ''
         if (canBeNotifiedInDiscord) {
+            let notificationChannel = discordClient.channels.cache.get(notificationChannelId)
             // Wait for message payload
-            let sentMessage = await notificationChannel.send(message)
+            let {messageId, guildId, channelId} = await notificationChannel.send(message)
             // Insert message id
-            logsOjb.messageId = sentMessage.id
+            logsOjb.messageId = messageId
             // Build message url
-            messageUrl = `https://discord.com/channels/${sentMessage.guildId}/${sentMessage.channelId}/${sentMessage.id}`
+            messageUrl = `https://discord.com/channels/${guildId}/${channelId}/${messageId}`
         }
 
         // Create logs
@@ -65,12 +70,7 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
         return response.message + ' ' + messageUrl
     } catch (e) {
         // Logger
-        await Gudalog.error(e.message, {
-            location: `Request/logs.js`,
-            data: logsOjb,
-            cacheId: cacheId,
-            step: stepNumber
-        })
+        console.error(e)
 
         return false
     }
