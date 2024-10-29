@@ -18,7 +18,7 @@ export const YoutubeChannelListener = (client) => {
 
                     let versions = await fetchResponse('versions', true)
                     if (versions) {
-                        await fetchResponse(
+                        let logResponse = await fetchResponse(
                             'logs/create',
                             false,
                             {
@@ -26,8 +26,8 @@ export const YoutubeChannelListener = (client) => {
                                 user: 1,
                                 title: data.items[0].snippet.title,
                                 description: null,
-                                url: youtubeUrl,
-                                type: null,
+                                url: youtubeUrl.href,
+                                type: 'youtube',
                                 notification: false,
                                 notificationDescription: null,
                                 kind: null,
@@ -35,6 +35,8 @@ export const YoutubeChannelListener = (client) => {
                             },
                             'POST'
                         )
+
+                        console.log(logResponse)
                     }
                 })
                 .catch(error => console.error("Erreur :", error));
