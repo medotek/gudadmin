@@ -9,7 +9,6 @@ import {
 } from "../Handler/Interaction/Modal/LogsModalHandler.js";
 import {ErrorEmbed} from "../Builder/EmbedBuilder.js";
 import {Gudalog} from "../Module/Guda.js";
-import {client} from "../index.js";
 
 export const Commands = (client, sequelize) => {
     client.on('interactionCreate', async interaction => {
