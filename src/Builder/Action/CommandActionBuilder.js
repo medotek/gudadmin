@@ -46,8 +46,7 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
         .setCustomId('logs-update-description')
         .setLabel("Description")
         // Paragraph means multiple lines of text.
-        .setStyle(TextInputStyle.Paragraph)
-        .setMaxLength(4000);
+        .setStyle(TextInputStyle.Paragraph);
 
     const url = new TextInputBuilder()
         .setCustomId('logs-update-url')
@@ -275,8 +274,7 @@ export async function LogsCreateActionBuilderStep4(interaction) {
         const modalInputDescription = new TextInputBuilder()
             .setCustomId('logs-create-modal-description')
             .setLabel("Message")
-            .setStyle(TextInputStyle.Paragraph)
-            .setMaxLength(1024);
+            .setStyle(TextInputStyle.Paragraph);
 
         const secondActionRow = new ActionRowBuilder().addComponents(modalInputDescription);
         modal.addComponents(secondActionRow);
