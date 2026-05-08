@@ -33,7 +33,7 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
                 }
                 break;
             case 'twitter':
-                message = logsNotificationRole(logsOjb.type) + ' ' + logsOjb.url
+                message = {content: (logsNotificationRole(logsOjb.type) ? logsNotificationRole(logsOjb.type) + ' ' : '') + logsOjb.url}
                 notificationChannelId = process.env.GUDA_LOG_TWITTER_NOTIFICATION_CHANNEL
                 canBeNotifiedInDiscord = logsOjb.notification;
                 break;
