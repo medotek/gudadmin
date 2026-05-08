@@ -73,8 +73,6 @@ export const Commands = (client, sequelize) => {
                 embeds: [ErrorEmbed(interaction, e)]
             })
 
-            console.log(e)
-            // Logger
             await Gudalog.error(e.message, {location: `commands.js`, interaction: interaction.toString()})
         }
     })

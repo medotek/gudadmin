@@ -69,9 +69,7 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
 
         return response.message + ' ' + messageUrl
     } catch (e) {
-        // Logger
-        console.error(e)
-
+        await Gudalog.error(e.message, {location: 'Handler/Request/logs.js'})
         return false
     }
 }

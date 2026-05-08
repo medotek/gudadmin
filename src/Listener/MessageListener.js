@@ -1,9 +1,11 @@
-import {fetchResponse} from "../Request/Command/Logs.js";
+import {fetchResponse, getLatestVersionId} from "../Request/Command/Logs.js";
+import {Gudalog} from "../Module/Guda.js";
+
+const BOT_USER_ID = parseInt(process.env.GUDA_LOG_USER_ID ?? '1')
 
 export const YoutubeChannelListener = (client) => {
     client.on('messageCreate', function (message) {
         if (message.channel.id !== process.env.YOUTUBE_CHANNEL_ID) return
-        // Extract URL
         const regex = /(https?:\/\/[^\s]+)/;
         const url = message.content?.match(regex);
 
@@ -13,33 +15,31 @@ export const YoutubeChannelListener = (client) => {
             fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${process.env.YOUTUBE_API_KEY}&part=snippet`)
                 .then(response => response.json())
                 .then(async data => {
-                    if (!data.items.length)
-                        return;
+                    if (!data.items.length) return;
 
-                    let versions = await fetchResponse('versions', true)
-                    if (versions) {
-                        let logResponse = await fetchResponse(
-                            'logs/create',
-                            false,
-                            {
-                                version: Object.entries(versions)[0][1].id,
-                                user: 1,
-                                title: data.items[0].snippet.title,
-                                description: null,
-                                url: youtubeUrl.href,
-                                type: 'youtube',
-                                notification: false,
-                                notificationDescription: null,
-                                kind: null,
-                                isAnUpdate: false
-                            },
-                            'POST'
-                        )
+                    const versions = await fetchResponse('versions', true)
+                    if (!versions) return
 
-                        console.log(logResponse)
-                    }
+                    const logResponse = await fetchResponse(
+                        'logs/create',
+                        false,
+                        {
+                            version: getLatestVersionId(versions),
+                            user: BOT_USER_ID,
+                            title: data.items[0].snippet.title,
+                            description: null,
+                            url: youtubeUrl.href,
+                            type: 'youtube',
+                            notification: false,
+                            notificationDescription: null,
+                            kind: null,
+                            isAnUpdate: false
+                        },
+                        'POST'
+                    )
+                    Gudalog.info('YouTube log créé', logResponse)
                 })
-                .catch(error => console.error("Erreur :", error));
+                .catch(error => Gudalog.error(error.message, {location: 'Listener/MessageListener.js'}));
         }
     })
 }

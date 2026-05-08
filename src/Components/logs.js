@@ -137,7 +137,8 @@ export class Logs {
                     : updatedLog.data.description;
 
                 if (!updatedLog.data.isAnUpdate) {
-                    content = {content: logsNotificationRole(updatedLog.data.type) + "\n\n" + `${updatedLog.data.description}` + "\n" + (updatedLog.data.url ?? '')}
+                    const mention = logsNotificationRole(updatedLog.data.type)
+                    content = {content: (mention ? mention + "\n\n" : '') + `${updatedLog.data.description}` + "\n" + (updatedLog.data.url ?? '')}
                 } else {
                     content = {embeds: [DiscordLogsNotificationEmbed(updatedLog.data, "**[Mise à jour]**")]}
                 }

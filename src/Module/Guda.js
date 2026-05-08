@@ -29,7 +29,6 @@ export const Gudalog = {
     error: async function (message, context) {
         try {
             logger.rotatingLogger.error(message, context)
-            // http request
             let logRecord = {
                 level: "error",
                 message: message,
@@ -49,11 +48,15 @@ export const Gudalog = {
                             body: JSON.stringify(logRecord)
                         }
                     }))
-            // Trigger
             asyncLogger.runHandlers(logRecord)
         } catch (e) {
-            console.log(e)
+            console.error(e)
         }
     },
-    // TODO : manage other debug levels
+    warn: function (message, context) {
+        console.warn(`[WARN] ${message}`, context ?? '')
+    },
+    info: function (message, context) {
+        console.info(`[INFO] ${message}`, context ?? '')
+    }
 }

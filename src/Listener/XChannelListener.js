@@ -1,10 +1,11 @@
-import {fetchResponse} from "../Request/Command/Logs.js"
+import {fetchResponse, getLatestVersionId} from "../Request/Command/Logs.js"
 import {Cache} from "../Module/Cache.js"
 import {Gudalog} from "../Module/Guda.js"
 import {request} from 'undici'
 
 const X_LAST_TWEET_KEY = 'x_last_tweet_id'
 const POLL_INTERVAL_MS = parseInt(process.env.X_POLL_INTERVAL_MINUTES ?? '15') * 60 * 1000
+const BOT_USER_ID = parseInt(process.env.GUDA_LOG_USER_ID ?? '1')
 
 async function xApiRequest(path) {
     const {statusCode, body} = await request(`https://api.twitter.com/2${path}`, {
@@ -38,7 +39,7 @@ export const XChannelListener = async () => {
     let userId
     try {
         userId = await fetchUserId(process.env.X_ACCOUNT_USERNAME)
-        console.log(`[X Listener] Surveillance du compte @${process.env.X_ACCOUNT_USERNAME} (id: ${userId})`)
+        Gudalog.info(`Surveillance du compte @${process.env.X_ACCOUNT_USERNAME} (id: ${userId})`)
     } catch (e) {
         await Gudalog.error(e.message, {location: 'Listener/XChannelListener.js', action: 'fetchUserId'})
         return
@@ -60,7 +61,7 @@ export const XChannelListener = async () => {
             const versions = await fetchResponse('versions', true)
             if (!versions) return
 
-            const versionId = Object.entries(versions)[0][1].id
+            const versionId = getLatestVersionId(versions)
 
             // Traitement du plus ancien au plus récent
             for (const tweet of tweets.reverse()) {
@@ -70,7 +71,7 @@ export const XChannelListener = async () => {
                     false,
                     {
                         version: versionId,
-                        user: 1,
+                        user: BOT_USER_ID,
                         title: tweet.text,
                         description: null,
                         url: tweetUrl,
@@ -82,7 +83,7 @@ export const XChannelListener = async () => {
                     },
                     'POST'
                 )
-                console.log('[X Listener] Nouveau tweet logué :', logResponse)
+                Gudalog.info('Nouveau tweet logué', logResponse)
             }
         } catch (e) {
             await Gudalog.error(e.message, {location: 'Listener/XChannelListener.js', action: 'poll'})

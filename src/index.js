@@ -11,7 +11,9 @@ import {XChannelListener} from "./Listener/XChannelListener.js";
 
 export const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent], partials: [Partials.Channel]});
 
-await deployCommands()
+if (process.env.DEPLOY_ON_START === 'true') {
+    await deployCommands()
+}
 
 await client.login(process.env.TOKEN);
 
