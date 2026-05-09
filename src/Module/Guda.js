@@ -48,9 +48,10 @@ export const Gudalog = {
                             body: JSON.stringify(logRecord)
                         }
                     }))
-            asyncLogger.runHandlers(logRecord)
+            await asyncLogger.runHandlers(logRecord)
         } catch (e) {
-            console.error(e)
+            // HTTP logger failure must never crash the process
+            console.error('[Gudalog] handler error:', e.message)
         }
     },
     warn: function (message, context) {

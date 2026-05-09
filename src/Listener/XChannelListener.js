@@ -91,5 +91,8 @@ export const XChannelListener = async () => {
     }
 
     await poll()
-    setInterval(poll, POLL_INTERVAL_MS)
+    setInterval(
+        () => poll().catch(e => Gudalog.warn('Erreur non gérée dans poll()', {message: e.message})),
+        POLL_INTERVAL_MS
+    )
 }

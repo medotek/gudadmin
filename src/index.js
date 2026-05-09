@@ -17,7 +17,7 @@ if (process.env.DEPLOY_ON_START === 'true') {
 
 await client.login(process.env.TOKEN);
 
-client.on("ready", async () => {
+client.on('clientReady', async () => {
     client.user.setActivity("ban", {type: ActivityType.Playing})
     await Commands(client)
     await YoutubeChannelListener(client)
