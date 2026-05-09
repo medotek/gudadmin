@@ -1,3 +1,4 @@
+import {MessageFlags} from "discord.js";
 import {
     LogsCRUDModalBuilder,
     LogsDeleteContextMessageActionBuilder
@@ -14,7 +15,7 @@ export default async function LogsContextMenuHandler(interaction) {
             let modal = await LogsCRUDModalBuilder(interaction)
             if (!modal) return await interaction.reply({
                 content: "Ceci n'est pas un log",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             await interaction.showModal(modal)
             break;
@@ -25,7 +26,7 @@ export default async function LogsContextMenuHandler(interaction) {
             if (typeof response !== 'object' || !response.hasOwnProperty('success') || !response.success) {
                 return await interaction.reply({
                     content: "Le log est introuvable",
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 })
             }
 
@@ -48,7 +49,7 @@ export default async function LogsContextMenuHandler(interaction) {
 
             await interaction.reply({
                 content: `Valider la suppression du log https://discord.com/channels/${repliedInteraction.guildId}/${repliedInteraction.channelId}/${repliedInteraction.id}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             })
             break;
     }

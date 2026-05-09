@@ -1,4 +1,4 @@
-import {PermissionsBitField} from "discord.js";
+import {MessageFlags, PermissionsBitField} from "discord.js";
 import {LogsEmbed} from "../../../Builder/EmbedBuilder.js";
 import {LogsActionsManagementBuilder} from "../../../Builder/Action/CommandActionBuilder.js";
 import {config} from "dotenv";
@@ -13,7 +13,7 @@ export async function LogsInteractionHandler(commandName, interaction) {
         let replyObj = {
             embeds: [LogsEmbed()],
             components: LogsActionsManagementBuilder(),
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         }
 
         return interaction.reply(replyObj)

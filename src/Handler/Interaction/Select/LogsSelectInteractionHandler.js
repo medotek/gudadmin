@@ -1,3 +1,4 @@
+import {MessageFlags} from "discord.js";
 import {Logs} from "../../../Components/logs.js";
 import {
     LogsCreateActionBuilderStep2, LogsCreateActionBuilderStep4,
@@ -34,7 +35,7 @@ export async function LogsSelectInteractionHandler(interaction) {
         case 'update-log-select':
             // Update log from SELECT action
             let modal = await LogsCRUDModalBuilder(interaction, 'select', value)
-            if (!modal) return await interaction.reply({content: 'Error thrown', ephemeral: true})
+            if (!modal) return await interaction.reply({content: 'Error thrown', flags: MessageFlags.Ephemeral})
 
             await interaction.showModal(modal)
             break;
@@ -48,7 +49,7 @@ export async function LogsSelectInteractionHandler(interaction) {
             ) {
                 return await interaction.reply({
                     content: "Le log est introuvable",
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 })
             }
 
@@ -78,10 +79,10 @@ export async function LogsSelectInteractionHandler(interaction) {
 
             await interaction.reply({
                 content: `Valider la suppression du log https://discord.com/channels/${repliedInteraction.guildId}/${repliedInteraction.channelId}/${repliedInteraction.id}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             })
             break;
         default:
-            await interaction.reply({content: 'Error thrown', ephemeral: true})
+            await interaction.reply({content: 'Error thrown', flags: MessageFlags.Ephemeral})
     }
 }
