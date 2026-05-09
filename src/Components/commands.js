@@ -14,7 +14,7 @@ export const Commands = (client, sequelize) => {
     client.on('interactionCreate', async interaction => {
         try {
             if (!interaction.member.permissions.has("ADMINISTRATOR")) {
-                let roles = process.env.GUDA_LOG_ALLOWED_ROLES.split(',')
+                let roles = process.env.GUDA_LOG_ALLOWED_ROLE.split(',')
                 let allowed = false;
                 for (const roleId of roles) {
                     if (!allowed)
@@ -73,8 +73,6 @@ export const Commands = (client, sequelize) => {
                 embeds: [ErrorEmbed(interaction, e)]
             })
 
-            console.log(e)
-            // Logger
             await Gudalog.error(e.message, {location: `commands.js`, interaction: interaction.toString()})
         }
     })

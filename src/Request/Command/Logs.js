@@ -6,6 +6,17 @@ config()
 
 
 /**
+ * Returns the ID of the most recent version from a versions response object.
+ * @param {object} versions
+ * @returns {number|null}
+ */
+export function getLatestVersionId(versions) {
+    const entries = Object.entries(versions)
+    if (!entries.length) return null
+    return entries[0][1].id
+}
+
+/**
  *
  * @param endpoint
  * @param isPublic

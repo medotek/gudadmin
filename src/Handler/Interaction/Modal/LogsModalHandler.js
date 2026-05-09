@@ -78,6 +78,10 @@ export async function LogsUpdate(interaction) {
     if (interaction.customId !== 'logs-update-modal') return;
     let cachedLog = await Cache.retrieve(`log_update_${interaction.user.id}`)
 
+    if (!cachedLog) {
+        return await interaction.reply({content: 'La commande a expiré, veuillez recommencer', ephemeral: true})
+    }
+
     let obj = {}
     // Get fields values from the submitted modal
     if (cachedLog.isAnUpdate) {

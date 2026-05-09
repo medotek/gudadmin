@@ -29,10 +29,7 @@ export class CacheService {
 
     retrieve(key) {
         const value = this.cache.get(key);
-        if (value) {
-            return Promise.resolve(value);
-        }
-        return null;
+        return value !== undefined ? value : null;
     }
 
     clear(keys) {

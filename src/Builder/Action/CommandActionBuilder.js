@@ -13,6 +13,7 @@ import {fetchResponse} from "../../Request/Command/Logs.js";
 import {config} from 'dotenv'
 import {Logs} from "../../Components/logs.js";
 import {Cache} from "../../Module/Cache.js";
+import {Gudalog} from "../../Module/Guda.js";
 
 config()
 
@@ -105,10 +106,8 @@ export async function LogsCRUDModalBuilder(interaction, origin = 'context', id =
 
             return modal;
         } catch (e) {
-
-            console.error(e);
+            Gudalog.error(e.message, {location: 'Builder/Action/CommandActionBuilder.js'})
             return false;
-
         }
     }
 

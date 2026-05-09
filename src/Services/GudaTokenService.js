@@ -16,8 +16,7 @@ export class GudaTokenService {
 
     async getBearerToken() {
         if (this.lastTimeUpdate) {
-            // + 1h
-            let lastTimeUpdateAfter = this.getLastTimeUpdate() + 3600
+            let lastTimeUpdateAfter = this.getLastTimeUpdate() + 3600000
             if (Date.now() < lastTimeUpdateAfter) {
                 return this.gudapiToken;
             }
@@ -31,7 +30,7 @@ export class GudaTokenService {
 
     async setBearerToken() {
         try {
-            const {statusCode, headers, trailers, body} = await this.getCredentials()
+            const {statusCode, body} = await this.getCredentials()
             if (statusCode === 200) {
                 this.gudapiToken = await body.json().then(r => {
                     if (r.token !== undefined && r.token) {
