@@ -1,5 +1,5 @@
 import {Logs} from "../../../Components/logs.js";
-import {ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder} from "discord.js";
+import {ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags} from "discord.js";
 import {Cache} from "../../../Module/Cache.js";
 
 /**
@@ -33,7 +33,7 @@ export async function LogsCreation(interaction) {
 
     if (url && !isValidUrl(url)) {
         interactionUpdate.content = 'Url non valide'
-        interactionUpdate.ephemeral = true
+        interactionUpdate.flags = MessageFlags.Ephemeral
         return await interaction.reply(interactionUpdate)
     }
 
@@ -62,7 +62,7 @@ export async function LogsCreation(interaction) {
         interactionUpdate = {
             embeds: [embed],
             components: [buttonsMenuBuilderRow, notificationButtons],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         }
     }
 
@@ -79,7 +79,7 @@ export async function LogsUpdate(interaction) {
     let cachedLog = await Cache.retrieve(`log_update_${interaction.user.id}`)
 
     if (!cachedLog) {
-        return await interaction.reply({content: 'La commande a expiré, veuillez recommencer', ephemeral: true})
+        return await interaction.reply({content: 'La commande a expiré, veuillez recommencer', flags: MessageFlags.Ephemeral})
     }
 
     let obj = {}
@@ -93,10 +93,10 @@ export async function LogsUpdate(interaction) {
     }
 
     if (!await Logs.update(interaction.user.id, obj, cachedLog)) {
-        return await interaction.reply({content: 'Une erreur est survenue', ephemeral: true})
+        return await interaction.reply({content: 'Une erreur est survenue', flags: MessageFlags.Ephemeral})
     }
 
-    return await interaction.reply({content: 'Log modifié avec succès', ephemeral: true})
+    return await interaction.reply({content: 'Log modifié avec succès', flags: MessageFlags.Ephemeral})
 }
 
 const isValidUrl = urlString => {

@@ -1,4 +1,5 @@
 import {InteractionType} from "discord-api-types/v10";
+import {MessageFlags} from "discord.js";
 import {LogsInteractionHandler} from "../Handler/Interaction/SlashCommand/Logs.js";
 import {LogsButtonInteractionHandler} from "../Handler/Interaction/Button/LogsButtonInteractionHandler.js";
 import LogsContextMenuHandler from "../Handler/Interaction/ContextMenu/LogsContextMenuHandler.js";
@@ -22,7 +23,7 @@ export const Commands = (client, sequelize) => {
                 }
 
                 if (!allowed)
-                    return await interaction.reply({content: "Mais qui es-tu ?", ephemeral: true});
+                    return await interaction.reply({content: "Mais qui es-tu ?", flags: MessageFlags.Ephemeral});
             }
 
             /**************************************/

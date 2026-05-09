@@ -1,3 +1,4 @@
+import {MessageFlags} from "discord.js";
 import {
     LogsCreateActionBuilderStep1,
     LogsCreateActionBuilderStep3,
@@ -21,7 +22,7 @@ export async function LogsButtonInteractionHandler(interaction) {
                 return;
             case 'logs-update':
                 let updateInteraction = await LogsSelectActionBuilder(interaction, 'update')
-                if (!updateInteraction) return await interaction.reply({content: 'No log data found', ephemeral: true})
+                if (!updateInteraction) return await interaction.reply({content: 'No log data found', flags: MessageFlags.Ephemeral})
                 await interaction.update(updateInteraction)
                 return;
             // STEP 3 - Is an update ?
@@ -49,22 +50,22 @@ export async function LogsButtonInteractionHandler(interaction) {
                 return;
             case 'logs-delete':
                 let deleteInteraction = await LogsSelectActionBuilder(interaction, 'delete')
-                if (!deleteInteraction) return await interaction.reply({content: 'No log data found', ephemeral: true})
+                if (!deleteInteraction) return await interaction.reply({content: 'No log data found', flags: MessageFlags.Ephemeral})
                 await interaction.update(deleteInteraction)
                 return;
         }
 
-        return await interaction.reply({content: 'Error thrown', ephemeral: true})
+        return await interaction.reply({content: 'Error thrown', flags: MessageFlags.Ephemeral})
     } else {
         if (!interaction.customId) {
-            return await interaction.reply({content: 'No custom id found', ephemeral: true})
+            return await interaction.reply({content: 'No custom id found', flags: MessageFlags.Ephemeral})
         }
 
         let splitMessage = interaction.message.content.split('/')
         if (splitMessage.length === 1)
             splitMessage = interaction.message.content.split('#')
         if (!splitMessage) {
-            return await interaction.reply({content: 'No message id found', ephemeral: true})
+            return await interaction.reply({content: 'No message id found', flags: MessageFlags.Ephemeral})
         }
 
         let logRef = null
@@ -82,7 +83,7 @@ export async function LogsButtonInteractionHandler(interaction) {
 
             if (!logId) return await interaction.reply({
                 content: `La commande a expiré, veuillez recommencer`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             })
 
             const response = await fetchResponse(`logs/delete/${logId}`, false, '', 'DELETE')
@@ -92,7 +93,7 @@ export async function LogsButtonInteractionHandler(interaction) {
                 let notifiedLog = await channel.messages.fetch(messageId)
                 if (!notifiedLog) return await interaction.reply({
                     content: "Error thrown",
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 })
 
                 // Delete notified log
@@ -102,7 +103,7 @@ export async function LogsButtonInteractionHandler(interaction) {
             // Reply to interaction
             await interaction.reply({
                 content: "Log supprimé",
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             })
 
             // Clear cached log id
