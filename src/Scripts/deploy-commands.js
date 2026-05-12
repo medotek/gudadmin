@@ -18,10 +18,11 @@ export async function deployCommands() {
     ];
 
     const rest = new REST({version: '10'}).setToken(process.env.TOKEN);
-    rest.put(
+    await rest.put(
         Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID),
         {body: commands}
-    )
-        .then(() => console.log('Successfully registered application commands.'))
-        .catch(console.error);
+    );
+    console.log('Successfully registered application commands.');
 }
+
+await deployCommands();

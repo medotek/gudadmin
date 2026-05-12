@@ -7,7 +7,6 @@ import {ActivityType, Client, GatewayIntentBits, Partials} from 'discord.js'
 import {Commands} from './Components/commands.js'
 import {deployCommands} from "./Scripts/deploy-commands.js";
 import {YoutubeChannelListener} from "./Listener/MessageListener.js";
-import {XChannelListener} from "./Listener/XChannelListener.js";
 
 export const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent], partials: [Partials.Channel]});
 
@@ -21,5 +20,4 @@ client.on('clientReady', async () => {
     client.user.setActivity("ban", {type: ActivityType.Playing})
     await Commands(client)
     await YoutubeChannelListener(client)
-    await XChannelListener()
 })

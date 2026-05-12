@@ -14,6 +14,7 @@ import {config} from 'dotenv'
 import {Logs} from "../../Components/logs.js";
 import {Cache} from "../../Module/Cache.js";
 import {Gudalog} from "../../Module/Guda.js";
+import {getLatestTweetsForUI} from "../../Services/TwitterService.js";
 
 config()
 
@@ -232,69 +233,70 @@ export async function LogsCreateActionBuilderStep3(interaction) {
 
 
 /**
+ * Builds the log creation modal for any type and update mode.
+ * Extracted so it can be reused by the quick-create slash command path.
+ * @param {string} title - Modal title (max 45 chars enforced internally)
+ * @param {string} type
+ * @param {boolean} isAnUpdate
+ * @returns {ModalBuilder}
+ */
+export function buildLogCreationModal(title, type, isAnUpdate) {
+    if (title.length > 45) title = title.slice(0, 44)
+    const modal = new ModalBuilder()
+        .setCustomId('logs-create-modal')
+        .setTitle(title)
+
+    modal.addComponents(new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+            .setCustomId('logs-create-modal-title')
+            .setLabel("Titre")
+            .setStyle(TextInputStyle.Short)
+            .setMaxLength(256)
+    ))
+
+    if (!isAnUpdate && type !== 'discord') {
+        modal.addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+                .setCustomId('logs-create-modal-link')
+                .setLabel("Lien")
+                .setStyle(TextInputStyle.Short)
+                .setMaxLength(524)
+                .setRequired(false)
+        ))
+    } else {
+        modal.addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+                .setCustomId('logs-create-modal-description')
+                .setLabel("Message")
+                .setStyle(TextInputStyle.Paragraph)
+        ))
+    }
+
+    if (type === 'website') {
+        modal.addComponents(new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+                .setCustomId('logs-create-modal-kind')
+                .setLabel("Entité")
+                .setPlaceholder("(ex : articles, personnages, fiches personnages, etc...)")
+                .setStyle(TextInputStyle.Short)
+                .setRequired(false)
+                .setMaxLength(100)
+        ))
+    }
+
+    return modal
+}
+
+/**
  * Logs creation - Step 4
  * @param interaction
  */
 export async function LogsCreateActionBuilderStep4(interaction) {
-
     let cachedLog = await Logs.getCachedLog(interaction, 'create')
     if (!cachedLog) return false;
     let version = await fetchResponse(`versions/${cachedLog.version}`, true)
     if (typeof version !== 'object' || !version.hasOwnProperty('number')) return false;
-    let title = `Création d'un log ${version.number} - ${cachedLog.type}`;
-
-    // max length -> 45
-    if (title.length > 45) title = title.slice(0, 44)
-    const modal = new ModalBuilder()
-        .setCustomId('logs-create-modal')
-        .setTitle(title);
-    const modalInputTitle = new TextInputBuilder()
-        .setCustomId('logs-create-modal-title')
-        .setLabel("Titre")
-        .setStyle(TextInputStyle.Short)
-        .setMaxLength(256);
-    const firstActionRow = new ActionRowBuilder().addComponents(modalInputTitle);
-    modal.addComponents(firstActionRow);
-
-    if (!cachedLog.isAnUpdate && cachedLog.type !== 'discord') {
-
-        const modalInputLink = new TextInputBuilder()
-            .setCustomId('logs-create-modal-link')
-            .setLabel("Lien")
-            .setStyle(TextInputStyle.Short)
-            .setMaxLength(524)
-            .setRequired(false);
-
-        const thirdActionRow = new ActionRowBuilder().addComponents(modalInputLink);
-        modal.addComponents(thirdActionRow);
-
-    } else {
-
-        const modalInputDescription = new TextInputBuilder()
-            .setCustomId('logs-create-modal-description')
-            .setLabel("Message")
-            .setStyle(TextInputStyle.Paragraph);
-
-        const secondActionRow = new ActionRowBuilder().addComponents(modalInputDescription);
-        modal.addComponents(secondActionRow);
-
-    }
-
-    if (cachedLog.type === 'website') {
-
-        const modalInputKind = new TextInputBuilder()
-            .setCustomId('logs-create-modal-kind')
-            .setLabel("Entité")
-            .setPlaceholder("(ex : articles, personnages, fiches personnages, etc...)")
-            .setStyle(TextInputStyle.Short)
-            .setRequired(false)
-            .setMaxLength(100);
-        const forthActionRow = new ActionRowBuilder().addComponents(modalInputKind);
-        modal.addComponents(forthActionRow);
-
-    }
-
-    return modal;
+    return buildLogCreationModal(`Création d'un log ${version.number} - ${cachedLog.type}`, cachedLog.type, cachedLog.isAnUpdate)
 }
 
 export async function LogsSelectActionBuilder(interaction, action = 'update') {
@@ -329,6 +331,75 @@ export async function LogsSelectActionBuilder(interaction, action = 'update') {
 
     return {
         embeds: [embed], components: [buttonsMenuBuilderRow, selectMenuBuilderRow]
+    }
+}
+
+/**
+ * Notification step UI — shared between modal and Twitter select flows.
+ * Works with and without a prior interaction message (quick-create path).
+ * @param interaction
+ * @returns {{embeds: EmbedBuilder[], components: ActionRowBuilder[]}}
+ */
+export function LogsCreateNotificationStepBuilder(interaction = null) {
+    const description = interaction?.message?.embeds?.[0]?.description ?? 'Commande de gestion des logs'
+    let embed = new EmbedBuilder()
+    embed.setDescription(description)
+        .addFields({name: 'Action courante', value: 'Souhaites-tu que cela soit notifié sur discord ?'})
+
+    let buttonsMenuBuilderRow = new ActionRowBuilder().addComponents(new ButtonBuilder()
+        .setCustomId('logs-return-action')
+        .setLabel('Retour')
+        .setStyle(ButtonStyle.Secondary))
+
+    let notificationButtons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('logs-notification-action-true')
+            .setLabel('Oui')
+            .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+            .setCustomId('logs-notification-action-false')
+            .setLabel('Non')
+            .setStyle(ButtonStyle.Danger))
+
+    return {embeds: [embed], components: [buttonsMenuBuilderRow, notificationButtons]}
+}
+
+/**
+ * Logs creation - Step 4 (Twitter variant)
+ * Displays the 5 latest tweets as a select menu — served from cache when available.
+ * @param interaction
+ * @returns {Promise<{embeds: EmbedBuilder[], components: ActionRowBuilder[]}|null>}
+ */
+export async function LogsCreateActionBuilderStep4Twitter(interaction) {
+    const tweets = await getLatestTweetsForUI()
+    if (!tweets.length) return null
+
+    const description = interaction?.message?.embeds?.[0]?.description ?? 'Commande de gestion des logs'
+    let embed = new EmbedBuilder()
+    embed.setDescription(description)
+        .addFields({name: 'Action courante', value: 'Sélectionner un tweet'})
+
+    let buttonsMenuBuilderRow = new ActionRowBuilder().addComponents(new ButtonBuilder()
+        .setCustomId('logs-return-action')
+        .setLabel('Retour')
+        .setStyle(ButtonStyle.Secondary))
+
+    let selectMenu = new StringSelectMenuBuilder()
+        .setCustomId('create-log-twitter-tweet')
+        .setPlaceholder('Choisissez un tweet')
+
+    for (const tweet of tweets) {
+        const date = tweet.created_at ? new Date(tweet.created_at).toLocaleDateString('fr-FR') : ''
+        selectMenu.addOptions({
+            label: tweet.text.replace(/\n/g, ' ').substring(0, 100),
+            description: date,
+            value: tweet.id
+        })
+    }
+
+    return {
+        embeds: [embed],
+        components: [buttonsMenuBuilderRow, new ActionRowBuilder().addComponents(selectMenu)]
     }
 }
 

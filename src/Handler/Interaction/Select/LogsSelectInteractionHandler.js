@@ -1,10 +1,14 @@
 import {MessageFlags} from "discord.js";
 import {Logs} from "../../../Components/logs.js";
 import {
-    LogsCreateActionBuilderStep2, LogsCreateActionBuilderStep4,
+    LogsCreateActionBuilderStep2,
+    LogsCreateActionBuilderStep4,
+    LogsCreateActionBuilderStep4Twitter,
+    LogsCreateNotificationStepBuilder,
     LogsCRUDModalBuilder,
     LogsDeleteContextMessageActionBuilder
 } from "../../../Builder/Action/CommandActionBuilder.js";
+import {getLatestTweetsForUI} from "../../../Services/TwitterService.js";
 import {Cache} from "../../../Module/Cache.js";
 import {fetchResponse} from "../../../Request/Command/Logs.js";
 import {ErrorEmbed} from "../../../Builder/EmbedBuilder.js";
@@ -25,10 +29,43 @@ export async function LogsSelectInteractionHandler(interaction) {
         case 'create-log-type':
 
             if (await Logs.create(3, interaction.user.id, interaction.message.id, value)) {
-                let newInteraction2 = await LogsCreateActionBuilderStep4(interaction)
-                await interaction.showModal(newInteraction2)
+                if (value === 'twitter') {
+                    const twitterSelect = await LogsCreateActionBuilderStep4Twitter(interaction)
+                    if (!twitterSelect) {
+                        await interaction.update({content: 'Impossible de récupérer les tweets, veuillez réessayer', components: [], embeds: []})
+                    } else {
+                        await interaction.update(twitterSelect)
+                    }
+                } else {
+                    let newInteraction2 = await LogsCreateActionBuilderStep4(interaction)
+                    await interaction.showModal(newInteraction2)
+                }
             } else {
                 await interaction.update({content: '', components: [], embeds: [ErrorEmbed(interaction, {message: "STEP 2"})]})
+            }
+            break
+
+        case 'create-log-twitter-tweet':
+            const tweetId = value
+            const cachedTweets = await getLatestTweetsForUI()
+            const selectedTweet = cachedTweets.find(t => t.id === tweetId)
+
+            if (!selectedTweet) {
+                await interaction.update({content: 'Tweet introuvable, veuillez recommencer', components: [], embeds: []})
+                return
+            }
+
+            const tweetUrl = `https://x.com/${process.env.X_ACCOUNT_USERNAME}/status/${tweetId}`
+
+            if (await Logs.create(4, interaction.user.id, interaction.message.id, {
+                title: selectedTweet.text,
+                description: null,
+                url: tweetUrl,
+                kind: null
+            })) {
+                await interaction.update(LogsCreateNotificationStepBuilder(interaction))
+            } else {
+                await interaction.update({content: '', components: [], embeds: [ErrorEmbed(interaction, {message: "STEP 4 Twitter"})]})
             }
             break
 
