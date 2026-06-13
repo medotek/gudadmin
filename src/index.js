@@ -8,8 +8,17 @@ import {Commands} from './Components/commands.js'
 import {deployCommands} from "./Scripts/deploy-commands.js";
 import {YoutubeChannelListener} from "./Listener/MessageListener.js";
 import {XChannelListener} from "./Listener/XChannelListener.js";
+import {VuReactionListener} from "./Listener/ReactionListener.js";
 
-export const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent], partials: [Partials.Channel]});
+export const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessageReactions
+    ],
+    partials: [Partials.Channel, Partials.Message, Partials.Reaction, Partials.User]
+});
 
 if (process.env.DEPLOY_ON_START === 'true') {
     await deployCommands()
@@ -22,4 +31,5 @@ client.on('clientReady', async () => {
     await Commands(client)
     await YoutubeChannelListener(client)
     await XChannelListener()
+    VuReactionListener(client)
 })
