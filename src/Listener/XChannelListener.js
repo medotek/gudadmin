@@ -25,11 +25,11 @@ async function fetchUserId(username) {
 async function fetchLatestTweets(userId) {
     const params = new URLSearchParams({
         max_results: '5',
-        'tweet.fields': 'created_at,text',
+        'tweet.fields': 'created_at,text,in_reply_to_user_id',
         exclude: 'replies,retweets'
     })
     const data = await xApiRequest(`/users/${userId}/tweets?${params}`)
-    return (data.data ?? []).slice(0, 3)
+    return (data.data ?? []).filter(t => !t.in_reply_to_user_id).slice(0, 3)
 }
 
 function stripQueryParams(url) {
