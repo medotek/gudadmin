@@ -137,8 +137,10 @@ export async function LogsCreateActionBuilderStep1(interaction) {
             .setCustomId('create-log-version')
             .setPlaceholder('Choisissez la version')
 
+        let sortedVersions = Object.values(versions).sort((a, b) => Number(b.id) - Number(a.id))
+
         let i = 0;
-        for (const [key, version] of Object.entries(versions)) {
+        for (const version of sortedVersions) {
             if (!version.hasOwnProperty('number') || !version.hasOwnProperty('id') || i > 2)
                 continue;
 
