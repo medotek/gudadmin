@@ -1,7 +1,7 @@
 import {fetchResponse, getLatestVersionId} from "../Request/Command/Logs.js"
 import {Gudalog} from "../Module/Guda.js"
 import {logsNotificationRole} from "../Helper/NotificationRole.js"
-import {client} from "../index.js"
+import {client} from "../Module/Client.js"
 import {request} from 'undici'
 
 const POLL_INTERVAL_MS = parseInt(process.env.X_POLL_INTERVAL_MINUTES ?? '15') * 60 * 1000

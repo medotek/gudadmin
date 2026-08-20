@@ -1,5 +1,5 @@
 import {fetchResponse} from "../../Request/Command/Logs.js";
-import {client} from "../../index.js";
+import {client} from "../../Module/Client.js";
 import {DiscordLogsNotificationEmbed, LogsNotificationEmbed} from "../../Builder/EmbedBuilder.js";
 import {logsNotificationRole} from "../../Helper/NotificationRole.js";
 import {Cache} from "../../Module/Cache.js";

@@ -1,6 +1,7 @@
 import {REST} from '@discordjs/rest'
 import {Routes} from 'discord-api-types/v10'
 import {config} from "dotenv";
+import {pathToFileURL} from "node:url";
 
 import {
     LogsDeleteContextMessageCommandBuilder,
@@ -25,4 +26,8 @@ export async function deployCommands() {
     console.log('Successfully registered application commands.');
 }
 
-await deployCommands();
+// Ne déploie que si le fichier est lancé directement (`yarn deploy`).
+// À l'import, on n'expose que la fonction : c'est index.js qui décide, via DEPLOY_ON_START.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+    await deployCommands();
+}
