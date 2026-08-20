@@ -1,5 +1,5 @@
 import {InteractionType} from "discord-api-types/v10";
-import {MessageFlags} from "discord.js";
+import {MessageFlags, PermissionFlagsBits} from "discord.js";
 import {LogsInteractionHandler} from "../Handler/Interaction/SlashCommand/Logs.js";
 import {LogsButtonInteractionHandler} from "../Handler/Interaction/Button/LogsButtonInteractionHandler.js";
 import LogsContextMenuHandler from "../Handler/Interaction/ContextMenu/LogsContextMenuHandler.js";
@@ -14,8 +14,12 @@ import {Gudalog} from "../Module/Guda.js";
 export const Commands = (client, sequelize) => {
     client.on('interactionCreate', async interaction => {
         try {
-            if (!interaction.member.permissions.has("ADMINISTRATOR")) {
-                let roles = process.env.GUDA_LOG_ALLOWED_ROLE.split(',')
+            // Hors serveur (MP) il n'y a pas de membre, donc aucune autorisation possible
+            if (!interaction.member)
+                return await interaction.reply({content: "Mais qui es-tu ?", flags: MessageFlags.Ephemeral});
+
+            if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+                let roles = (process.env.GUDA_LOG_ALLOWED_ROLE ?? '').split(',').map(id => id.trim()).filter(id => id !== '')
                 let allowed = false;
                 for (const roleId of roles) {
                     if (!allowed)
