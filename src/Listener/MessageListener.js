@@ -1,4 +1,4 @@
-import {fetchResponse, getLatestVersionId} from "../Request/Command/Logs.js";
+import {createLog, fetchResponse, getLatestVersionId} from "../Request/Command/Logs.js";
 import {Gudalog} from "../Module/Guda.js";
 
 const BOT_USER_ID = parseInt(process.env.GUDA_LOG_USER_ID ?? '1')
@@ -20,24 +20,27 @@ export const YoutubeChannelListener = (client) => {
                     const versions = await fetchResponse('versions', true)
                     if (!versions) return
 
-                    const logResponse = await fetchResponse(
-                        'logs/create',
-                        false,
-                        {
-                            version: getLatestVersionId(versions),
-                            user: BOT_USER_ID,
-                            title: data.items[0].snippet.title,
-                            description: null,
+                    const created = await createLog({
+                        version: getLatestVersionId(versions),
+                        user: BOT_USER_ID,
+                        title: data.items[0].snippet.title,
+                        description: null,
+                        url: youtubeUrl.href,
+                        type: 'youtube',
+                        notification: false,
+                        notificationDescription: null,
+                        kind: null,
+                        isAnUpdate: false
+                    })
+                    if (created.success) {
+                        Gudalog.info('YouTube log créé', {url: youtubeUrl.href})
+                    } else {
+                        await Gudalog.error(`Création du log YouTube échouée : ${created.message}`, {
+                            location: 'Listener/MessageListener.js',
                             url: youtubeUrl.href,
-                            type: 'youtube',
-                            notification: false,
-                            notificationDescription: null,
-                            kind: null,
-                            isAnUpdate: false
-                        },
-                        'POST'
-                    )
-                    Gudalog.info('YouTube log créé', logResponse)
+                            response: created.response
+                        })
+                    }
                 })
                 .catch(error => Gudalog.error(error.message, {location: 'Listener/MessageListener.js'}));
         }

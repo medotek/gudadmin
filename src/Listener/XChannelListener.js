@@ -1,4 +1,4 @@
-import {fetchResponse, getLatestVersionId} from "../Request/Command/Logs.js"
+import {attachMessageIdToLog, createLog, fetchResponse, getLatestVersionId} from "../Request/Command/Logs.js"
 import {Gudalog} from "../Module/Guda.js"
 import {logsNotificationRole} from "../Helper/NotificationRole.js"
 import {client} from "../Module/Client.js"
@@ -6,8 +6,6 @@ import {request} from 'undici'
 
 const POLL_INTERVAL_MS = parseInt(process.env.X_POLL_INTERVAL_MINUTES ?? '15') * 60 * 1000
 const BOT_USER_ID = parseInt(process.env.GUDA_LOG_USER_ID ?? '1')
-// Logs.title est un VARCHAR(255) côté gudashboard : au-delà, l'insert échoue
-const MAX_TITLE_LENGTH = 255
 
 async function xApiRequest(path) {
     const {statusCode, body} = await request(`https://api.x.com/2${path}`, {
@@ -43,13 +41,10 @@ function tweetUrlOf(tweet) {
 }
 
 /**
- * Première ligne non vide du tweet, tronquée pour tenir dans la colonne title.
- * Array.from découpe par caractère (pas par unité UTF-16) pour ne pas casser les emojis.
+ * Première ligne non vide du tweet (la troncature est faite par createLog).
  */
 function buildTitle(text) {
-    const line = (text ?? '').split('\n').map(l => l.trim()).find(Boolean) ?? 'Tweet'
-    const chars = Array.from(line)
-    return chars.length <= MAX_TITLE_LENGTH ? line : chars.slice(0, MAX_TITLE_LENGTH - 1).join('') + '…'
+    return (text ?? '').split('\n').map(l => l.trim()).find(Boolean) ?? 'Tweet'
 }
 
 /**
@@ -62,26 +57,19 @@ async function fetchTwitterLogsByUrl() {
     return new Map(logs.filter(log => log.url).map(log => [stripQueryParams(log.url), log]))
 }
 
-async function createTweetLog(tweet, versionId) {
-    const response = await fetchResponse(
-        'logs/create',
-        false,
-        {
-            version: versionId,
-            user: BOT_USER_ID,
-            title: buildTitle(tweet.text),
-            description: null,
-            url: tweetUrlOf(tweet),
-            type: 'twitter',
-            notification: true,
-            notificationDescription: null,
-            kind: null,
-            isAnUpdate: false,
-            messageId: null
-        },
-        'POST'
-    )
-    return response?.success === true ? response : {error: response}
+function createTweetLog(tweet, versionId) {
+    return createLog({
+        version: versionId,
+        user: BOT_USER_ID,
+        title: buildTitle(tweet.text),
+        description: null,
+        url: tweetUrlOf(tweet),
+        type: 'twitter',
+        notification: true,
+        notificationDescription: null,
+        kind: null,
+        isAnUpdate: false
+    })
 }
 
 async function sendNotification(tweetUrl) {
@@ -93,22 +81,6 @@ async function sendNotification(tweetUrl) {
     const mention = logsNotificationRole('twitter')
     const sent = await channel.send({content: (mention ? mention + ' ' : '') + tweetUrl})
     return sent.id
-}
-
-/**
- * Rattache l'id du message Discord au log (le endpoint create ne renvoie pas l'id du log).
- */
-async function attachMessageId(tweetUrl, messageId) {
-    const logs = await fetchTwitterLogsByUrl()
-    const log = logs?.get(tweetUrl)
-    if (!log?.id) {
-        Gudalog.warn('Log du tweet introuvable pour rattacher le messageId', {tweetUrl, messageId})
-        return
-    }
-    const response = await fetchResponse('logs/update', false, {id: log.id, messageId}, 'PUT')
-    if (response?.success !== true) {
-        Gudalog.warn('Échec du rattachement du messageId au log', {tweetUrl, messageId, response})
-    }
 }
 
 export const XChannelListener = async () => {
@@ -157,11 +129,11 @@ export const XChannelListener = async () => {
                 // 1. Créer le log d'abord : tant qu'il n'existe pas, on ne notifie pas.
                 //    Un échec ici est retenté au poll suivant sans spammer Discord.
                 const created = await createTweetLog(tweet, versionId)
-                if (created.error !== undefined) {
-                    await Gudalog.error('Création du log Twitter échouée, notification non envoyée', {
+                if (!created.success) {
+                    await Gudalog.error(`Création du log Twitter échouée, notification non envoyée : ${created.message}`, {
                         location: 'Listener/XChannelListener.js',
                         tweetUrl,
-                        response: created.error
+                        response: created.response
                     })
                     continue
                 }
@@ -180,7 +152,9 @@ export const XChannelListener = async () => {
                 }
 
                 // 3. Rattacher le message Discord au log (best effort).
-                if (messageId) await attachMessageId(tweetUrl, messageId)
+                if (messageId && !await attachMessageIdToLog(created.payload, messageId)) {
+                    Gudalog.warn('Impossible de rattacher le messageId au log', {tweetUrl, messageId})
+                }
             }
         } catch (e) {
             await Gudalog.error(e.message, {location: 'Listener/XChannelListener.js', action: 'checkAndCreateLog'})

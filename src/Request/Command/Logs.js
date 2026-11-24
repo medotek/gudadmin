@@ -16,6 +16,74 @@ export function getLatestVersionId(versions) {
     return entries[0][1].id
 }
 
+// Tailles des colonnes de l'entité Logs côté gudashboard
+const LOG_TITLE_MAX_LENGTH = 255
+const LOG_URL_MAX_LENGTH = 255
+const LOG_KIND_MAX_LENGTH = 30
+
+/**
+ * Tronque une chaîne à `max` caractères (par caractère, pas par unité UTF-16,
+ * pour ne pas couper un emoji en deux).
+ */
+export function truncateText(value, max) {
+    if (typeof value !== 'string') return value
+    const chars = Array.from(value)
+    return chars.length <= max ? value : chars.slice(0, max - 1).join('') + '…'
+}
+
+/**
+ * Point d'entrée unique pour créer un log. Ne notifie jamais sur Discord :
+ * l'appelant n'envoie la notification que si `success` est vrai, puis rattache
+ * le message avec attachMessageIdToLog().
+ *
+ * @param {object} data payload de logs/create
+ * @returns {Promise<{success: boolean, message: string, payload: object, response?: any}>}
+ */
+export async function createLog(data) {
+    const payload = {
+        ...data,
+        title: truncateText(data.title?.trim(), LOG_TITLE_MAX_LENGTH),
+        kind: truncateText(data.kind, LOG_KIND_MAX_LENGTH),
+        messageId: null
+    }
+
+    // Une URL tronquée serait inutilisable : on refuse plutôt que de la couper
+    if (payload.url && Array.from(payload.url).length > LOG_URL_MAX_LENGTH) {
+        return {success: false, message: `URL trop longue (max ${LOG_URL_MAX_LENGTH} caractères)`, payload}
+    }
+
+    const response = await fetchResponse('logs/create', false, payload, 'POST')
+    if (response?.success === true) return {success: true, message: response.message, payload}
+
+    return {
+        success: false,
+        message: response?.message ?? 'Réponse invalide de l\'API logs/create',
+        payload,
+        response
+    }
+}
+
+/**
+ * Rattache un message Discord à un log déjà créé. logs/create ne renvoyant pas
+ * l'id du log, on le retrouve parmi les plus récents de son type (triés par date DESC).
+ *
+ * @param {object} payload le `payload` renvoyé par createLog()
+ * @param {string} messageId
+ * @returns {Promise<boolean>}
+ */
+export async function attachMessageIdToLog(payload, messageId) {
+    const logs = await fetchResponse(`logs?type=${encodeURIComponent(payload.type)}`, true)
+    if (!Array.isArray(logs)) return false
+
+    // Le backend stocke une url absente sous forme de chaîne vide
+    const url = payload.url || ''
+    const log = logs.find(l => l.title === payload.title && (l.url || '') === url && !l.discordMessageId)
+    if (!log?.id) return false
+
+    const response = await fetchResponse('logs/update', false, {id: log.id, messageId}, 'PUT')
+    return response?.success === true
+}
+
 /**
  *
  * @param endpoint
