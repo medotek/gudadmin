@@ -46,7 +46,8 @@ export async function logsCreationRequestHandler(logsOjb, cacheId, stepNumber = 
         if (canBeNotifiedInDiscord) {
             let notificationChannel = discordClient.channels.cache.get(notificationChannelId)
             // Wait for message payload
-            let {messageId, guildId, channelId} = await notificationChannel.send(message)
+            // discord.js Message : l'id est `id`, pas `messageId`
+            let {id: messageId, guildId, channelId} = await notificationChannel.send(message)
             // Insert message id
             logsOjb.messageId = messageId
             // Build message url
